@@ -1,0 +1,48 @@
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/components/layout/BaseLayout.tsx
+  39:3  error  'collapsed' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/components/layout/Sidebar.tsx
+  10:7   error  'Ico' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  57:19  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/components/layout/Sidebar.tsx:57:19
+  55 |     if (!collapsed) {
+  56 |       const active = menuItems.find(m => location.pathname.includes(`/dashboard/${m.id}`));
+> 57 |       if (active) setOpenSection(active.id);
+     |                   ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |       else if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') setOpenSection(null);
+  59 |     }
+  60 |   }, [location.pathname, collapsed]);  react-hooks/set-state-in-effect
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/pages/Dashboard.tsx
+  69:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/pages/Login.tsx
+  72:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/pages/scolarite/ElevesList.tsx
+  20:16  error  'err' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  83:39  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  86:53  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/home/fedjio/.gemini/antigravity/scratch/school-erp/frontend/src/pages/scolarite/ElevesList.tsx:86:53
+  84 |                 <tr key={eleve.matricule}>
+  85 |                   <td style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, color: '#4b5563' }}>
+> 86 |                     #{eleve.matricule || Math.floor(Math.random() * 10000)}
+     |                                                     ^^^^^^^^^^^^^ Cannot call impure function
+  87 |                   </td>
+  88 |                   <td style={{ fontWeight: 500 }}>
+  89 |                     {eleve.nom} {eleve.prenom}  react-hooks/purity
+
+✖ 9 problems (9 errors, 0 warnings)
+
