@@ -200,7 +200,7 @@ function Header({
         .hd-pdrop-sep { height: 1px; background: #f3f4f6; margin: 4px 0; }
 
         @media (max-width: 768px) {
-          .hd-root { padding: 0 16px; gap: 8px; }
+          .hd-root { paddzing: 0 16px; gap: 8px; }
           .hd-search { display: none; }
           .hd-profile-name, .hd-profile-role { display: none; }
           .hd-profile-btn { padding: 4px; border-radius: 50%; }
@@ -327,17 +327,17 @@ export const BaseLayout = () => {
       <div className="layout-root">
         <div className={`sb-backdrop ${mobileOpen ? 'show' : ''}`} onClick={() => setMobileOpen(false)} />
 
-        <Sidebar 
-          collapsed={collapsed} 
-          setCollapsed={setCollapsed} 
+        <Sidebar
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
           mobileOpen={mobileOpen}
           setMobileOpen={setMobileOpen}
         />
 
         <div className="layout-content">
           <Header onToggle={() => {
-             if (isMobile) setMobileOpen(o => !o);
-             else setCollapsed(c => !c);
+            if (isMobile) setMobileOpen(o => !o);
+            else setCollapsed(c => !c);
           }} />
 
           <main

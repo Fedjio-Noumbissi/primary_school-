@@ -121,7 +121,7 @@ const Modal = ({ open, onClose, editingItem, fields, formData, onChange, onSubmi
     if (open) {
       requestAnimationFrame(() => setVisible(true));
     } else {
-      setVisible(false);
+      setTimeout(() => setVisible(false), 0);
     }
   }, [open]);
 
@@ -149,19 +149,6 @@ const Modal = ({ open, onClose, editingItem, fields, formData, onChange, onSubmi
       transition: 'border-color 0.18s, box-shadow 0.18s, background 0.18s',
       boxSizing: 'border-box',
     };
-
-    const focusStyle = `
-      .gc-field-input:focus {
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16,185,129,0.12) !important;
-        background: #fff !important;
-      }
-      .gc-field-select:focus {
-        border-color: #10b981 !important;
-        box-shadow: 0 0 0 3px rgba(16,185,129,0.12) !important;
-        background: #fff !important;
-      }
-    `;
 
     if (field.type === 'checkbox') {
       return (
@@ -492,7 +479,7 @@ const Modal = ({ open, onClose, editingItem, fields, formData, onChange, onSubmi
 // ── Delete confirm dialog ─────────────────────────────────────────────────────
 const DeleteDialog = ({ open, onConfirm, onCancel, isPending }: { open: boolean; onConfirm: () => void; onCancel: () => void; isPending: boolean }) => {
   const [visible, setVisible] = useState(false);
-  useEffect(() => { if (open) requestAnimationFrame(() => setVisible(true)); else setVisible(false); }, [open]);
+  useEffect(() => { if (open) requestAnimationFrame(() => setVisible(true)); else setTimeout(() => setVisible(false), 0); }, [open]);
   if (!open && !visible) return null;
 
   return (
@@ -588,7 +575,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
       // 1. Sanitize payload: only send what's defined in config.fields
       const sanitizedPayload: any = {};
       config.fields.forEach(f => {
-        let val = payload[f.name];
+        const val = payload[f.name];
         if (val === '' || val === undefined) {
            sanitizedPayload[f.name] = null;
         } else if (f.type === 'number' && val !== null) {

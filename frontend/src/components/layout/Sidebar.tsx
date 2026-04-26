@@ -62,7 +62,7 @@ export const Sidebar = ({
 
   useEffect(() => {
     if (mobileOpen && setMobileOpen) setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, mobileOpen, setMobileOpen]);
 
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? 'AD';
   const displayName = user?.nom ?? user?.username ?? 'Administrateur Principal';
