@@ -1,4 +1,4 @@
-import { RefreshCcw } from 'lucide-react';
+import { Repeat } from 'lucide-react';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Cycles = () => {
@@ -6,17 +6,19 @@ export const Cycles = () => {
     <GenericCRUDPage
       config={{
         endpoint: '/parametres/cycles',
-        title: 'Cycles d\'Enseignement',
-        subtitle: 'Gestion des cycles (Primaire, Collège, Lycée...)',
-        icon: <RefreshCcw />,
+        title: 'Cycles Scolaires',
+        subtitle: 'Cycles d\'enseignement (Primaire, Secondaire…)',
+        icon: <Repeat />,
         primaryKey: 'idCycle',
         columns: [
-          { key: 'libelle', label: 'Libellé' },
-          { key: 'description', label: 'Description' }
+          { key: 'libelle', label: 'Cycle', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
+          { key: 'description', label: 'Description', render: (val) => <span style={{ color: '#6b7280' }}>{val || '-'}</span> },
+          { key: 'idAdmin', label: 'ID Admin', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
-          { name: 'libelle', label: 'Libellé', type: 'text', required: true },
-          { name: 'description', label: 'Description', type: 'textarea' }
+          { name: 'libelle', label: 'Nom du cycle (ex: Primaire)', type: 'text', required: true },
+          { name: 'description', label: 'Description', type: 'text' },
+          { name: 'idAdmin', label: 'ID Admin', type: 'number' }
         ]
       }}
     />

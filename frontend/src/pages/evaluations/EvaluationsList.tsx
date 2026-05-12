@@ -1,4 +1,4 @@
-import { PenTool } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const EvaluationsList = () => {
@@ -6,23 +6,26 @@ export const EvaluationsList = () => {
     <GenericCRUDPage
       config={{
         endpoint: '/evaluations/evaluations',
-        title: 'Notes & Évaluations',
-        subtitle: 'Saisie des notes obtenues par les élèves',
-        icon: <PenTool />,
+        title: 'Évaluations',
+        subtitle: 'Notes et appréciations des élèves',
+        icon: <ClipboardList />,
         primaryKey: 'idEval',
+        searchPlaceholder: "Rechercher par appréciation...",
         columns: [
-          { key: 'matricule', label: 'Matricule Elève' },
-          { key: 'note', label: 'Note Obtenue' },
-          { key: 'appreciation', label: 'Appréciation' }
+          { key: 'matricule', label: 'Matricule Élève', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val || 0).padStart(4, '0')}</span> },
+          { key: 'note', label: 'Note', render: (val) => <span style={{ color: '#059669', fontWeight: 700, fontSize: '15px' }}>{val ?? 'N/A'}</span> },
+          { key: 'appreciation', label: 'Appréciation', render: (val) => <span style={{ color: '#374151' }}>{val || '-'}</span> },
+          { key: 'idCours', label: 'ID Cours', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },
+          { key: 'idSession', label: 'ID Session', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
-          { name: 'matricule', label: 'Matricule d\'élève', type: 'number', required: true },
-          { name: 'idEpreuve', label: 'ID Épreuve (optionnel)', type: 'number' },
+          { name: 'note', label: 'Note obtenue', type: 'number', required: true },
+          { name: 'appreciation', label: 'Appréciation', type: 'text' },
+          { name: 'matricule', label: 'Matricule de l\'élève', type: 'number', required: true },
+          { name: 'idEpreuve', label: 'ID Épreuve', type: 'number' },
           { name: 'idCours', label: 'ID Cours', type: 'number', required: true },
           { name: 'idSession', label: 'ID Session', type: 'number', required: true },
-          { name: 'note', label: 'Note', type: 'number', required: true },
-          { name: 'appreciation', label: 'Appréciation (ex: Très bien)', type: 'text' },
-          { name: 'idPers', label: 'Identifiant correcteur (Personne)', type: 'number' }
+          { name: 'idPers', label: 'ID Personne (évaluateur)', type: 'number' }
         ]
       }}
     />

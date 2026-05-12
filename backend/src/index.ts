@@ -13,6 +13,7 @@ import personnesRoutes from './routes/personnes.routes';
 import financeRoutes from './routes/finance.routes';
 import parametresRoutes from './routes/parametres.routes';
 import evaluationsRoutes from './routes/evaluations.routes';
+import permissionsRoutes from './routes/permissions.routes';
 
 // Load env vars
 dotenv.config();
@@ -45,14 +46,17 @@ app.use('/api/personnes', personnesRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/parametres', parametresRoutes);
 app.use('/api/evaluations', evaluationsRoutes);
+app.use('/api/permissions', permissionsRoutes);
 
 // Error Handler (must be after routes)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  // Attempt to connect to DB at startup
-  await checkDBConnection();
+  // Check DB connection in background — ne bloque pas le démarrage
+  checkDBConnection().catch(err => {
+    console.warn('⚠️  DB connection check failed (will retry on first request):', err.message);
+  });
 });

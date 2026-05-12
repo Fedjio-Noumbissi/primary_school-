@@ -401,7 +401,7 @@ INSERT IGNORE INTO Parents (idParent, idPers, matricule, idAdmin) VALUES (1, 1, 
 INSERT IGNORE INTO Session (idSession, libelle, idTrimestre, idPers) VALUES (1, 'Examen Sequentiel 1', 1, 1);
 INSERT IGNORE INTO Evaluation (idEval, note, matricule, idCours, idSession, idPers) VALUES (1, 16.5, 1, 1, 1, 1);
 INSERT IGNORE INTO Mode (idMode, libelle, idFondateur) VALUES (1, 'Orange Money', 1);
-INSERT IGNORE INTO Paiement (idPai, matricule, idAca, montant, idMode) VALUES (1, 1, 25000, 1);
+INSERT IGNORE INTO Paiement (idPai, matricule, idAca, montant, idMode) VALUES (1, 1, 1, 25000, 1);
 INSERT IGNORE INTO Quartier (idQuartier, libelle) VALUES (1, 'Bastos');
 INSERT IGNORE INTO Residents (idResi, idQuartier, idAdmin) VALUES (1, 1, 1);
 INSERT IGNORE INTO NatureEpreuve (idNature, libelle) VALUES (1, 'Contrôle de connaissances');
@@ -416,5 +416,33 @@ INSERT IGNORE INTO Livres (idLivre, titre, idSpecialite, idAdmin) VALUES (1, 'Ma
 INSERT IGNORE INTO Scolarite (idScolarite, inscription, pension, nbreTranche, idCycle) VALUES (1, 10000, 50000, 2, 1);
 INSERT IGNORE INTO Tranches (idTranche, libelle, montant, idScolarite) VALUES (1, 'Tranche 1', 25000, 1);
 INSERT IGNORE INTO Messages (idMessages, idExp_Pers, idParent, objet, type_message) VALUES (1, 1, 1, 'Convocation', 1);
+-- 32. Permissions Routes
+CREATE TABLE IF NOT EXISTS permissions_routes (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  route       VARCHAR(255) NOT NULL,
+  role        VARCHAR(100) NOT NULL,
+  peut_acceder TINYINT(1) DEFAULT 1,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_route_role (route, role)
+);
+
+-- 33. Utilisateurs (Nouveau système RBAC)
+CREATE TABLE IF NOT EXISTS utilisateurs (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  nom          VARCHAR(255) NOT NULL,
+  username     VARCHAR(255) NOT NULL UNIQUE,
+  password     VARCHAR(255) NOT NULL,  -- hashé bcrypt ou clair pour dev
+  role         ENUM(
+                 'fondateur','directeur','admin_scolarite',
+                 'admin_auditeur','parent','enseignant','administratif'
+               ) NOT NULL DEFAULT 'parent',
+  actif        TINYINT(1) DEFAULT 1,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Utilisateur admin par défaut
+INSERT IGNORE INTO utilisateurs (nom, username, password, role)
+VALUES ('Administrateur Principal', 'admin@ecole.cm', 'peda2026', 'fondateur');
 
 SET FOREIGN_KEY_CHECKS = 1;

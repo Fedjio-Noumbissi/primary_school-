@@ -1,4 +1,4 @@
-import { Flag } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Rapports = () => {
@@ -6,24 +6,26 @@ export const Rapports = () => {
     <GenericCRUDPage
       config={{
         endpoint: '/evaluations/rapports',
-        title: 'Rapports de Conduite',
-        subtitle: 'Suivi disciplinaire et sanctions',
-        icon: <Flag />,
+        title: 'Rapports Disciplinaires',
+        subtitle: 'Suivi du comportement et de la discipline',
+        icon: <AlertTriangle />,
         primaryKey: 'idRap',
+        searchPlaceholder: "Rechercher un rapport...",
         columns: [
-          { key: 'matricule', label: 'Matricule Elève' },
-          { key: 'libelle', label: 'Motif' },
-          { key: 'points', label: 'Points/Gravité' },
-          { key: 'event_date', label: 'Date', render: (val) => val ? new Date(val).toLocaleDateString() : '-' }
+          { key: 'libelle', label: 'Libellé', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
+          { key: 'points', label: 'Points', render: (val) => <span style={{ color: '#e11d48', fontWeight: 600 }}>{val ?? 'N/A'}</span> },
+          { key: 'matricule', label: 'Matricule', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val || 0).padStart(4, '0')}</span> },
+          { key: 'event_date', label: 'Date', render: (val) => <span style={{ color: '#6b7280' }}>{val ? new Date(val).toLocaleDateString('fr-FR') : 'N/A'}</span> },
+          { key: 'idAca', label: 'ID Année', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
-          { name: 'matricule', label: 'Matricule d\'élève', type: 'number', required: true },
-          { name: 'idAca', label: 'Année académique (ID)', type: 'number', required: true },
-          { name: 'libelle', label: 'Intitulé / Motif', type: 'text', required: true },
-          { name: 'points', label: 'Points attribués / retirés', type: 'number' },
-          { name: 'commentaire', label: 'Commentaire détaillé', type: 'textarea' },
-          { name: 'event_date', label: 'Date de l\'incident', type: 'date' },
-          { name: 'idPers', label: 'Rapporteur (ID Personne)', type: 'number' }
+          { name: 'libelle', label: 'Libellé du rapport', type: 'text', required: true },
+          { name: 'points', label: 'Points', type: 'number' },
+          { name: 'matricule', label: 'Matricule de l\'élève', type: 'number', required: true },
+          { name: 'idAca', label: 'ID Année Académique', type: 'number' },
+          { name: 'commentaire', label: 'Commentaire', type: 'textarea' },
+          { name: 'event_date', label: 'Date de l\'événement', type: 'date' },
+          { name: 'idPers', label: 'ID Personne (rapporteur)', type: 'number' }
         ]
       }}
     />

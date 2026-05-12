@@ -1,0 +1,19 @@
+◇ injected env (8) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Starting Database Initialization...
+❌ Error during Database Initialization:
+Error: connect ETIMEDOUT
+    at initDB (/home/fedjio/.gemini/antigravity/scratch/school-erp/backend/src/initDB.ts:12:36)
+    at fs (/home/fedjio/.gemini/antigravity/scratch/school-erp/backend/src/initDB.ts:48:1)
+    at Object.<anonymous> (/home/fedjio/.gemini/antigravity/scratch/school-erp/backend/src/initDB.ts:48:8)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object.transformer (/home/fedjio/.gemini/antigravity/scratch/school-erp/backend/node_modules/tsx/dist/register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at cjsLoader (node:internal/modules/esm/translators:266:5) {
+  errorno: 'ETIMEDOUT',
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  fatal: true
+}

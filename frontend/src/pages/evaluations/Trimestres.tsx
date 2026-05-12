@@ -1,4 +1,4 @@
-import { PieChart } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Trimestres = () => {
@@ -7,18 +7,20 @@ export const Trimestres = () => {
       config={{
         endpoint: '/evaluations/trimestres',
         title: 'Trimestres',
-        subtitle: 'Découpage de l\'année en trimestres/semestres',
-        icon: <PieChart />,
+        subtitle: 'Gestion des périodes trimestrielles',
+        icon: <CalendarDays />,
         primaryKey: 'idTrimes',
         columns: [
-          { key: 'idAca', label: 'ID Année' },
-          { key: 'libelle', label: 'Libellé' },
-          { key: 'periode', label: 'Période' }
+          { key: 'libelle', label: 'Trimestre', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
+          { key: 'periode', label: 'Période', render: (val) => <span style={{ color: '#6b7280' }}>{val || '-'}</span> },
+          { key: 'idAca', label: 'ID Année Acad.', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },
+          { key: 'idAdmin', label: 'ID Admin', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
-          { name: 'idAca', label: 'Identifiant Année Académique', type: 'number', required: true },
-          { name: 'libelle', label: 'Nom du trimestre (ex: Premier Trimestre)', type: 'text', required: true },
-          { name: 'periode', label: 'Période couverte', type: 'text' }
+          { name: 'libelle', label: 'Nom du trimestre', type: 'text', required: true },
+          { name: 'periode', label: 'Période (ex: Sept-Déc)', type: 'text' },
+          { name: 'idAca', label: 'ID Année Académique', type: 'number', required: true },
+          { name: 'idAdmin', label: 'ID Admin', type: 'number' }
         ]
       }}
     />

@@ -1,0 +1,386 @@
+◇ injected env (8) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+Starting Database Initialization...
+Connecting to Server... Automatically creating Database "ecole2026" if missing.
+Reading SQL Schema from /home/fedjio/.gemini/antigravity/scratch/school-erp/backend/src/config/schema.sql...
+Executing tables creation and seeding Admin...
+❌ Error during Database Initialization:
+Error: Unknown column 'idPai' in 'field list'
+    at initDB (/home/fedjio/.gemini/antigravity/scratch/school-erp/backend/src/initDB.ts:35:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'idPai' in 'field list'",
+  sql: 'SET FOREIGN_KEY_CHECKS = 0;\n' +
+    '\n' +
+    '-- 1. Admin\n' +
+    'CREATE TABLE IF NOT EXISTS Admin (\n' +
+    '  ID int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  nom varchar(100) NOT NULL,\n' +
+    '  username varchar(50) NOT NULL UNIQUE,\n' +
+    '  password varchar(255) NOT NULL,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  typeAdmin smallint DEFAULT 1,\n' +
+    '  mobile varchar(15),\n' +
+    '  alanyaID varchar(15),\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP\n' +
+    ');\n' +
+    '\n' +
+    '-- 2. Personne\n' +
+    'CREATE TABLE IF NOT EXISTS Personne (\n' +
+    '  idPers int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  nom varchar(255) NOT NULL,\n' +
+    '  prenom varchar(255),\n' +
+    '  dateNaissance date,\n' +
+    '  lieuNaissance varchar(100),\n' +
+    '  mobile varchar(15),\n' +
+    '  phone varchar(15),\n' +
+    '  typePersonne smallint,\n' +
+    '  username varchar(100),\n' +
+    '  password varchar(100),\n' +
+    '  alanyaID varchar(15),\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 3. Cycle\n' +
+    'CREATE TABLE IF NOT EXISTS Cycle (\n' +
+    '  idCycle int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  description tinytext,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP\n' +
+    ');\n' +
+    '\n' +
+    '-- 4. Classe\n' +
+    'CREATE TABLE IF NOT EXISTS Classe (\n' +
+    '  idClasse int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(100) NOT NULL,\n' +
+    '  idCycle int,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idCycle) REFERENCES Cycle(idCycle),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 5. Salle\n' +
+    'CREATE TABLE IF NOT EXISTS Salle (\n' +
+    '  idSalle int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(30) NOT NULL,\n' +
+    '  position varchar(100),\n' +
+    '  surface varchar(30),\n' +
+    '  idClasse int,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idClasse) REFERENCES Classe(idClasse),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 6. AnneeAcademique\n' +
+    'CREATE TABLE IF NOT EXISTS AnneeAcademique (\n' +
+    '  idAnnee int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(200) NOT NULL,\n' +
+    '  periode varchar(255),\n' +
+    '  idAdmin int,\n' +
+    '  created_at date,\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 7. Trimestre\n' +
+    'CREATE TABLE IF NOT EXISTS Trimestre (\n' +
+    '  idTrimes int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  periode varchar(255),\n' +
+    '  idAca int,\n' +
+    '  idAdmin int,\n' +
+    '  FOREIGN KEY (idAca) REFERENCES AnneeAcademique(idAnnee),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 8. VilleNaissance\n' +
+    'CREATE TABLE IF NOT EXISTS VilleNaissance (\n' +
+    '  idVille int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(100) NOT NULL,\n' +
+    '  actif tinyint(1) DEFAULT 1\n' +
+    ');\n' +
+    '\n' +
+    '-- 9. Eleve\n' +
+    'CREATE TABLE IF NOT EXISTS Eleve (\n' +
+    '  matricule int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  nom varchar(60) NOT NULL,\n' +
+    '  prenom varchar(60),\n' +
+    '  dateNaissance date,\n' +
+    '  lieuNaissance varchar(30),\n' +
+    '  sexe smallint,\n' +
+    '  langue varchar(30),\n' +
+    '  photoURL varchar(255),\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idVilleNaissance int,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idVilleNaissance) REFERENCES VilleNaissance(idVille),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 10. Frequente\n' +
+    'CREATE TABLE IF NOT EXISTS Frequente (\n' +
+    '  idFrequente int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  idSalle int,\n' +
+    '  idAcademi int,\n' +
+    '  matricule int,\n' +
+    '  commentaire varchar(255),\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idSalle) REFERENCES Salle(idSalle),\n' +
+    '  FOREIGN KEY (idAcademi) REFERENCES AnneeAcademique(idAnnee),\n' +
+    '  FOREIGN KEY (matricule) REFERENCES Eleve(matricule),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 11. Cours\n' +
+    'CREATE TABLE IF NOT EXISTS Cours (\n' +
+    '  idCours int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  note float,\n' +
+    '  coefficient float,\n' +
+    '  description text,\n' +
+    '  idClasse int,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idClasse) REFERENCES Classe(idClasse),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 12. Enseignant\n' +
+    'CREATE TABLE IF NOT EXISTS Enseignant (\n' +
+    '  idEnseignant int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  idPers int,\n' +
+    '  idCours int,\n' +
+    '  Actif tinyint(1) DEFAULT 1,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers),\n' +
+    '  FOREIGN KEY (idCours) REFERENCES Cours(idCours),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 13. Parents\n' +
+    'CREATE TABLE IF NOT EXISTS Parents (\n' +
+    '  idParent int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  idPers int,\n' +
+    '  matricule int,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers),\n' +
+    '  FOREIGN KEY (matricule) REFERENCES Eleve(matricule),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 14. Session\n' +
+    'CREATE TABLE IF NOT EXISTS Session (\n' +
+    '  idSession int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  description tinytext,\n' +
+    '  idTrimestre int,\n' +
+    '  idPers int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idTrimestre) REFERENCES Trimestre(idTrimes),\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers)\n' +
+    ');\n' +
+    '\n' +
+    '-- 15. Evaluation\n' +
+    'CREATE TABLE IF NOT EXISTS Evaluation (\n' +
+    '  idEval int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  note float,\n' +
+    '  appreciation varchar(255),\n' +
+    '  matricule int,\n' +
+    '  idEpreuve int,\n' +
+    '  idCours int,\n' +
+    '  idSession int,\n' +
+    '  idPers int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (matricule) REFERENCES Eleve(matricule),\n' +
+    '  FOREIGN KEY (idCours) REFERENCES Cours(idCours),\n' +
+    '  FOREIGN KEY (idSession) REFERENCES Session(idSession),\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers)\n' +
+    ');\n' +
+    '\n' +
+    '-- 16. Mode\n' +
+    'CREATE TABLE IF NOT EXISTS Mode (\n' +
+    '  idMode int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(100) NOT NULL,\n' +
+    '  information tinytext,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idFondateur int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP\n' +
+    ');\n' +
+    '\n' +
+    '-- 17. Paiement\n' +
+    'CREATE TABLE IF NOT EXISTS Paiement (\n' +
+    '  idPai int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  matricule int,\n' +
+    '  idAca int,\n' +
+    '  montant float NOT NULL,\n' +
+    '  url varchar(255),\n' +
+    '  comentaire varchar(255),\n' +
+    '  idMode int,\n' +
+    '  operation_ID varchar(30),\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  datePaie date,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (matricule) REFERENCES Eleve(matricule),\n' +
+    '  FOREIGN KEY (idAca) REFERENCES AnneeAcademique(idAnnee),\n' +
+    '  FOREIGN KEY (idMode) REFERENCES Mode(idMode)\n' +
+    ');\n' +
+    '\n' +
+    '-- 18. Quartier\n' +
+    'CREATE TABLE IF NOT EXISTS Quartier (\n' +
+    '  idQuartier int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(100) NOT NULL,\n' +
+    '  description tinytext\n' +
+    ');\n' +
+    '\n' +
+    '-- 19. Residents\n' +
+    'CREATE TABLE IF NOT EXISTS Residents (\n' +
+    '  idResi int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  idQuartier int,\n' +
+    '  description tinytext,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idQuartier) REFERENCES Quartier(idQuartier),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 20. NatureEpreuve\n' +
+    'CREATE TABLE IF NOT EXISTS NatureEpreuve (\n' +
+    '  idNature int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  description tinytext\n' +
+    ');\n' +
+    '\n' +
+    '-- 21. Epreuve\n' +
+    'CREATE TABLE IF NOT EXISTS Epreuve (\n' +
+    '  idEpreuve int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  urlDoc varchar(255),\n' +
+    '  Auteur varchar(255),\n' +
+    '  idNature int,\n' +
+    '  idPers int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idNature) REFERENCES NatureEpreuve(idNature),\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers)\n' +
+    ');\n' +
+    '\n' +
+    '-- 22. Discipline\n' +
+    'CREATE TABLE IF NOT EXISTS Discipline (\n' +
+    '  ID int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  points int\n' +
+    ');\n' +
+    '\n' +
+    '-- 23. Rapport\n' +
+    'CREATE TABLE IF NOT EXISTS Rapport (\n' +
+    '  idRap int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(100) NOT NULL,\n' +
+    '  points int,\n' +
+    '  matricule int,\n' +
+    '  idAca int,\n' +
+    '  commentaire text,\n' +
+    '  event_date date,\n' +
+    '  idPers int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (matricule) REFERENCES Eleve(matricule),\n' +
+    '  FOREIGN KEY (idAca) REFERENCES AnneeAcademique(idAnnee),\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers)\n' +
+    ');\n' +
+    '\n' +
+    '-- 24. Titulaire\n' +
+    'CREATE TABLE IF NOT EXISTS Titulaire (\n' +
+    '  idTitulaire int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  idPers int,\n' +
+    '  idSalle int,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idPers) REFERENCES Personne(idPers),\n' +
+    '  FOREIGN KEY (idSalle) REFERENCES Salle(idSalle),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 25. JourSemaine\n' +
+    'CREATE TABLE IF NOT EXISTS JourSemaine (\n' +
+    '  ID int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(15) NOT NULL\n' +
+    ');\n' +
+    '\n' +
+    '-- 26. EmploiDuTemps\n' +
+    'CREATE TABLE IF NOT EXISTS EmploiDuTemps (\n' +
+    '  idTemps int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  jour varchar(30),\n' +
+    '  heure varchar(6),\n' +
+    '  idClasse int,\n' +
+    '  idCours int,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idClasse) REFERENCES Classe(idClasse),\n' +
+    '  FOREIGN KEY (idCours) REFERENCES Cours(idCours),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 27. Specialite\n' +
+    'CREATE TABLE IF NOT EXISTS Specialite (\n' +
+    '  idSpecialite int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  idAdmin int,\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 28. Livres\n' +
+    'CREATE TABLE IF NOT EXISTS Livres (\n' +
+    '  idLivre int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  titre varchar(255) NOT NULL,\n' +
+    '  auteurs varchar(255),\n' +
+    '  prix float,\n' +
+    '  idSpecialite int,\n' +
+    '  edition varchar(255),\n' +
+    '  annee_parution date,\n' +
+    '  totalCopie smallint,\n' +
+    '  idAdmin int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idSpecialite) REFERENCES Specialite(idSpecialite),\n' +
+    '  FOREIGN KEY (idAdmin) REFERENCES Admin(ID)\n' +
+    ');\n' +
+    '\n' +
+    '-- 29. Scolarite\n' +
+    'CREATE TABLE IF NOT EXISTS Scolarite (\n' +
+    '  idScolarite int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  inscription float,\n' +
+    '  pension float,\n' +
+    '  nbreTranche smallint,\n' +
+    '  description tinytext,\n' +
+    '  idCycle int,\n' +
+    '  idFondateur int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idCycle) REFERENCES Cycle(idCycle)\n' +
+    ');\n' +
+    '\n' +
+    '-- 30. Tranches\n' +
+    'CREATE TABLE IF NOT EXISTS Tranches (\n' +
+    '  idTranche int AUTO_INCREMENT PRIMARY KEY,\n' +
+    '  libelle varchar(255) NOT NULL,\n' +
+    '  montant float,\n' +
+    '  delai_mois char(2),\n' +
+    '  delai_jour char(2),\n' +
+    '  idScolarite int,\n' +
+    '  actif tinyint(1) DEFAULT 1,\n' +
+    '  idFondateur int,\n' +
+    '  created_at datetime DEFAULT CURRENT_TIMESTAMP,\n' +
+    '  FOREIGN KEY (idScolarite) REFERENCES Scolarite(idScolarite)\n' +
+    ');\n' +
+    '\n' +
+    '-- 31. Messages\n' +
+    'CREATE TABLE IF NOT EXISTS Messages (\n' +
+    '  idMessages int AUTO_INCREMENT PRIMA'... 3886 more characters
+}

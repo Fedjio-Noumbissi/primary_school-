@@ -1,4 +1,4 @@
-# EduPrime - Système de Gestion Scolaire
+# CogniSchool - Système de Gestion Scolaire
 
 Une plateforme web de gestion (ERP) pour établissements scolaires construite avec Node.js (Express), React 18, et MySQL.
 

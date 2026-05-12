@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import toast from 'react-hot-toast';
 
 // ── Design tokens (shared with BaseLayout & Dashboard) ──────────────────────
 // Sidebar bg: #0d1117  |  Accent: #059669 / #34d399  |  Font: Sora
@@ -27,11 +28,11 @@ const IconMenuToggle = () => <svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 // ── Menu config ──────────────────────────────────────────────────────────────
 const menuItems = [
-  { id: 'scolarite', icon: <IconBook />, label: 'Scolarité', accent: '#3b82f6', subItems: [{ label: 'Élèves', path: '/dashboard/scolarite/eleves', dot: '#3b82f6' }, { label: 'Classes', path: '/dashboard/scolarite/classes', dot: '#8b5cf6' }, { label: 'Cours', path: '/dashboard/scolarite/cours', dot: '#06b6d4' }, { label: 'Emploi du temps', path: '/dashboard/scolarite/emplois', dot: '#f59e0b' }, { label: 'Titulaires', path: '/dashboard/scolarite/titulaires', dot: '#10b981' }] },
-  { id: 'personnes', icon: <IconUsers />, label: 'Personnes', accent: '#8b5cf6', subItems: [{ label: 'Enseignants', path: '/dashboard/personnes/enseignants', dot: '#8b5cf6' }, { label: 'Parents', path: '/dashboard/personnes/parents', dot: '#ec4899' }, { label: 'Admins', path: '/dashboard/personnes/admins', dot: '#f97316' }, { label: 'Résidents', path: '/dashboard/personnes/residents', dot: '#14b8a6' }] },
-  { id: 'finance', icon: <IconCard />, label: 'Finance', accent: '#e11d48', subItems: [{ label: 'Paiements', path: '/dashboard/finance/paiements', dot: '#e11d48' }, { label: 'Scolarités', path: '/dashboard/finance/scolarites', dot: '#f59e0b' }, { label: 'Tranches', path: '/dashboard/finance/tranches', dot: '#10b981' }, { label: 'Modes de paiement', path: '/dashboard/finance/modes', dot: '#3b82f6' }] },
-  { id: 'evaluations', icon: <IconClipboard />, label: 'Évaluations', accent: '#f59e0b', subItems: [{ label: 'Évaluations', path: '/dashboard/evaluations/list', dot: '#f59e0b' }, { label: 'Épreuves', path: '/dashboard/evaluations/epreuves', dot: '#f97316' }, { label: 'Rapports', path: '/dashboard/evaluations/rapports', dot: '#06b6d4' }, { label: 'Sessions', path: '/dashboard/evaluations/sessions', dot: '#8b5cf6' }, { label: 'Trimestres', path: '/dashboard/evaluations/trimestres', dot: '#10b981' }] },
-  { id: 'parametres', icon: <IconSettings />, label: 'Paramètres', accent: '#6b7280', subItems: [{ label: 'Années académiques', path: '/dashboard/parametres/annees', dot: '#6b7280' }, { label: 'Cycles', path: '/dashboard/parametres/cycles', dot: '#8b5cf6' }, { label: 'Disciplines', path: '/dashboard/parametres/disciplines', dot: '#f59e0b' }, { label: 'Salles', path: '/dashboard/parametres/salles', dot: '#10b981' }, { label: 'Livres', path: '/dashboard/parametres/livres', dot: '#3b82f6' }, { label: 'Spécialités', path: '/dashboard/parametres/specialites', dot: '#e11d48' }] },
+  { id: 'scolarite', icon: <IconBook />, label: 'Scolarité', accent: '#3b82f6', subItems: [{ label: 'Élèves', path: '/scolarite/eleves', dot: '#3b82f6' }, { label: 'Classes', path: '/scolarite/classes', dot: '#8b5cf6' }, { label: 'Cours', path: '/scolarite/cours', dot: '#06b6d4' }, { label: 'Emploi du temps', path: '/scolarite/emplois', dot: '#f59e0b' }, { label: 'Titulaires', path: '/scolarite/titulaires', dot: '#10b981' }, { label: 'Inscriptions/Salles', path: '/scolarite/frequentes', dot: '#6366f1' }] },
+  { id: 'personnes', icon: <IconUsers />, label: 'Personnes', accent: '#8b5cf6', subItems: [{ label: 'Répertoire', path: '/personnes/personnes', dot: '#3b82f6' }, { label: 'Enseignants', path: '/personnes/enseignants', dot: '#8b5cf6' }, { label: 'Parents', path: '/personnes/parents', dot: '#ec4899' }, { label: 'Admins', path: '/personnes/admins', dot: '#f97316' }, { label: 'Résidents', path: '/personnes/residents', dot: '#14b8a6' }, { label: 'Messages', path: '/personnes/messages', dot: '#6366f1' }] },
+  { id: 'finance', icon: <IconCard />, label: 'Finance', accent: '#e11d48', subItems: [{ label: 'Paiements', path: '/finance/paiements', dot: '#e11d48' }, { label: 'Scolarités', path: '/finance/scolarites', dot: '#f59e0b' }, { label: 'Tranches', path: '/finance/tranches', dot: '#10b981' }, { label: 'Modes de paiement', path: '/finance/modes', dot: '#3b82f6' }] },
+  { id: 'evaluations', icon: <IconClipboard />, label: 'Évaluations', accent: '#f59e0b', subItems: [{ label: 'Évaluations', path: '/evaluations/list', dot: '#f59e0b' }, { label: 'Épreuves', path: '/evaluations/epreuves', dot: '#f97316' }, { label: 'Natures d\'épreuve', path: '/evaluations/natures', dot: '#e11d48' }, { label: 'Rapports', path: '/evaluations/rapports', dot: '#06b6d4' }, { label: 'Sessions', path: '/evaluations/sessions', dot: '#8b5cf6' }, { label: 'Trimestres', path: '/evaluations/trimestres', dot: '#10b981' }] },
+  { id: 'parametres', icon: <IconSettings />, label: 'Paramètres', accent: '#6b7280', subItems: [{ label: 'Années académiques', path: '/parametres/annees', dot: '#6b7280' }, { label: 'Cycles', path: '/parametres/cycles', dot: '#8b5cf6' }, { label: 'Disciplines', path: '/parametres/disciplines', dot: '#f59e0b' }, { label: 'Salles', path: '/parametres/salles', dot: '#10b981' }, { label: 'Livres', path: '/parametres/livres', dot: '#3b82f6' }, { label: 'Spécialités', path: '/parametres/specialites', dot: '#e11d48' }, { label: 'Quartiers', path: '/parametres/quartiers', dot: '#06b6d4' }, { label: 'Villes naissance', path: '/parametres/villes', dot: '#14b8a6' }] },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -49,10 +50,33 @@ export const Sidebar = ({
   const { logout, user } = useAuthStore();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Persist collapsed state
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar_collapsed');
+    if (saved !== null) {
+      setCollapsed(saved === 'true');
+    }
+  }, [setCollapsed]);
+
+  const handleToggleCollapse = () => {
+    setCollapsed(c => {
+      const newVal = !c;
+      localStorage.setItem('sidebar_collapsed', String(newVal));
+      return newVal;
+    });
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Vous avez été déconnecté');
+    navigate('/login', { replace: true });
+  };
 
   useEffect(() => {
     if (!collapsed) {
-      const active = menuItems.find(m => location.pathname.includes(`/dashboard/${m.id}`));
+      const active = menuItems.find(m => location.pathname.includes(`/${m.id}`));
       /* eslint-disable react-hooks/set-state-in-effect */
       if (active) setOpenSection(active.id);
       else if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') setOpenSection(null);
@@ -64,8 +88,57 @@ export const Sidebar = ({
     if (mobileOpen && setMobileOpen) setMobileOpen(false);
   }, [location.pathname, mobileOpen, setMobileOpen]);
 
-  const initials = user?.username?.slice(0, 2).toUpperCase() ?? 'AD';
+  const initials = user?.nom?.slice(0, 2).toUpperCase() ?? user?.username?.slice(0, 2).toUpperCase() ?? 'AD';
   const displayName = user?.nom ?? user?.username ?? 'Administrateur Principal';
+  
+  // Mapping roles to allowed menus
+  const roleMenus: Record<string, string[]> = {
+    'fondateur': ['scolarite', 'personnes', 'finance', 'evaluations', 'parametres', 'audit_route', 'admin_route'],
+    'directeur': ['scolarite', 'personnes', 'finance', 'evaluations', 'parametres', 'admin_route'],
+    'admin_scolarite': ['scolarite', 'personnes', 'evaluations'],
+    'admin_auditeur': ['audit_route'], // We'll map 'audit_route' to the audit page
+    'parent': ['parent_dashboard'],
+    'enseignant': ['enseignant_dashboard'],
+    'administratif': ['finance', 'administratif_dashboard']
+  };
+
+  const allowedMenus = user?.role ? (roleMenus[user.role] || []) : roleMenus['fondateur'];
+
+  // Add specific pages to menuItems dynamically if they are allowed
+  const dynamicMenuItems = [...menuItems];
+  
+  if (allowedMenus.includes('audit_route')) {
+    dynamicMenuItems.push({ id: 'audit', icon: <IconDashboard />, label: 'Audit', accent: '#6b7280', subItems: [{ label: 'Vue d\'audit', path: '/audit', dot: '#6b7280' }] });
+  }
+  if (allowedMenus.includes('admin_route')) {
+    dynamicMenuItems.push({ id: 'admin', icon: <IconSettings />, label: 'Administration', accent: '#7c3aed', subItems: [{ label: 'Utilisateurs', path: '/admin/utilisateurs', dot: '#7c3aed' }, { label: 'Permissions', path: '/admin/routes', dot: '#059669' }] });
+  }
+  if (allowedMenus.includes('parent_dashboard')) {
+    dynamicMenuItems.push({ id: 'parent', icon: <IconUsers />, label: 'Espace Parent', accent: '#f59e0b', subItems: [{ label: 'Mon Dashboard', path: '/parent/dashboard', dot: '#f59e0b' }] });
+  }
+  if (allowedMenus.includes('enseignant_dashboard')) {
+    dynamicMenuItems.push({ id: 'enseignant', icon: <IconBook />, label: 'Espace Enseignant', accent: '#06b6d4', subItems: [{ label: 'Mon Dashboard', path: '/enseignant/dashboard', dot: '#06b6d4' }] });
+  }
+  if (allowedMenus.includes('administratif_dashboard')) {
+    dynamicMenuItems.push({ id: 'administratif', icon: <IconCard />, label: 'Finance & Admin', accent: '#e11d48', subItems: [{ label: 'Mon Dashboard', path: '/administratif/dashboard', dot: '#e11d48' }] });
+  }
+
+  const filteredMenuItems = dynamicMenuItems.filter(m => allowedMenus.includes(m.id) || user?.role === 'fondateur');
+
+  const badgeColors: Record<string, string> = {
+    'fondateur': 'bg-[#7c3aed] text-white shadow-[0_0_0_2px_rgba(124,58,237,0.3)]',
+    'directeur': 'bg-[#3b82f6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.3)]',
+    'admin_scolarite': 'bg-[#059669] text-white shadow-[0_0_0_2px_rgba(5,150,105,0.3)]',
+    'admin_auditeur': 'bg-[#6b7280] text-white shadow-[0_0_0_2px_rgba(107,114,128,0.3)]',
+    'parent': 'bg-[#f59e0b] text-white shadow-[0_0_0_2px_rgba(245,158,11,0.3)]',
+    'enseignant': 'bg-[#06b6d4] text-white shadow-[0_0_0_2px_rgba(6,182,212,0.3)]',
+    'administratif': 'bg-[#e11d48] text-white shadow-[0_0_0_2px_rgba(225,29,72,0.3)]'
+  };
+  const roleNameDisplay: Record<string, string> = {
+    'fondateur': 'Fondateur', 'directeur': 'Directeur', 'admin_scolarite': 'Admin Scolarité', 'admin_auditeur': 'Auditeur', 'parent': 'Parent', 'enseignant': 'Enseignant', 'administratif': 'Administratif'
+  };
+  const roleColorClass = user?.role ? (badgeColors[user.role] || badgeColors['admin_scolarite']) : badgeColors['fondateur'];
+  const roleDisplayName = user?.role ? (roleNameDisplay[user.role] || user.role) : 'Administrateur';
 
   return (
     <>
@@ -204,11 +277,9 @@ export const Sidebar = ({
         }
         .sb-avatar {
           width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-          background: linear-gradient(135deg, #059669, #34d399);
           display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 700; color: white;
           font-family: 'Sora', sans-serif;
-          box-shadow: 0 0 0 2px rgba(5,150,105,0.3);
           position: relative;
         }
         .sb-avatar::after {
@@ -250,7 +321,7 @@ export const Sidebar = ({
         <div className="sb-hd">
           <div className="sb-logo-icon"><IconBookOpen /></div>
           <span className="sb-logo-text">Edu<em>Prime</em></span>
-          <button className="sb-toggle" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand' : 'Collapse'}>
+          <button className="sb-toggle" onClick={handleToggleCollapse} title={collapsed ? 'Expand' : 'Collapse'}>
             <IconMenuToggle />
           </button>
         </div>
@@ -271,7 +342,7 @@ export const Sidebar = ({
 
           {!collapsed && <div className="sb-lbl">Gestion</div>}
 
-          {menuItems.map(item => {
+          {filteredMenuItems.map(item => {
             const isOpen = openSection === item.id && !collapsed;
             return (
               <div key={item.id}>
@@ -310,15 +381,15 @@ export const Sidebar = ({
         {/* Footer */}
         <div className="sb-ft">
           <div className="sb-user">
-            <div className="sb-avatar">{initials}</div>
+            <div className={`sb-avatar ${roleColorClass.split(' ')[0]}`} style={{boxShadow: roleColorClass.includes('shadow') ? roleColorClass.split('shadow-')[1]?.replace(/[[\]]/g, '') : undefined}}>{initials}</div>
             {!collapsed && (
               <div className="sb-uinfo">
                 <div className="sb-uname">{displayName}</div>
-                <div className="sb-urole">Administrateur</div>
+                <div className="sb-urole">{roleDisplayName}</div>
               </div>
             )}
           </div>
-          <button className="sb-logout" onClick={logout}>
+          <button className="sb-logout" onClick={handleLogout}>
             <IconLogout />
             <span className="sb-logout-lbl">Déconnexion</span>
           </button>

@@ -12,15 +12,18 @@ export const ElevesList = () => {
         primaryKey: 'matricule',
         searchPlaceholder: "Rechercher un élève (nom, matricule)...",
         columns: [
-          { key: 'matricule', label: 'Matricule', render: (val) => (
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, color: '#4b5563' }}>
-                #{val || 'N/A'}
-              </span>
-          )},
-          { key: 'nom', label: 'Nom et Prénom', render: (_, row) => (
-             <span style={{ fontWeight: 500 }}>{row.nom} {row.prenom}</span>
-          )},
-          { key: 'sexe', label: 'Sexe', render: (val) => val == 1 ? 'M' : 'F' },
+          { key: 'nom', label: 'Nom Complet', render: (_, row) => {
+             const fullName = `${row.nom || 'Élève'} ${row.prenom || ''}`.trim();
+             return (
+               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                 <img src={`https://ui-avatars.com/api/?name=${fullName.replace(/ /g, '+')}&background=random&color=fff`} alt="avatar" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                 <span style={{ fontWeight: 600, color: '#111827' }}>{fullName}</span>
+               </div>
+             );
+          }},
+          { key: 'matricule', label: 'Matricule', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val || 0).padStart(4, '0')}</span> },
+          { key: 'sexe', label: 'Sexe', render: (val) => <span style={{ color: '#374151', fontWeight: 500 }}>{val == 1 ? 'Masculin' : 'Féminin'}</span> },
+          { key: 'dateNaissance', label: 'Date Naissance', render: (val) => <span style={{ color: '#6b7280' }}>{val ? new Date(val).toLocaleDateString('fr-FR') : 'N/A'}</span> },
           { key: 'actif', label: 'Statut', render: (val) => (
              <span className={val ? 'pt-badge-green' : 'pt-badge-red'}>
                {val ? 'Actif' : 'Inactif'}
@@ -42,8 +45,10 @@ export const ElevesList = () => {
             ]
           },
           { name: 'langue', label: 'Langue (FR/EN)', type: 'text' },
-          { name: 'idVilleNaissance', label: 'ID Ville Naissance', type: 'number' },
-          { name: 'actif', label: 'Elève actuellement actif', type: 'checkbox' }
+          { name: 'photoURL', label: 'URL de la photo', type: 'text' },
+          { name: 'idVilleNaissance', label: 'ID Ville de naissance', type: 'number' },
+          { name: 'idAdmin', label: 'ID Admin', type: 'number' },
+          { name: 'actif', label: 'Élève actuellement actif', type: 'checkbox' }
         ]
       }}
     />

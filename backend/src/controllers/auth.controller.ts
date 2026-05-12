@@ -14,7 +14,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const { username, password } = loginSchema.parse(req.body);
 
     const [rows]: any = await pool.query(
-      'SELECT * FROM Admin WHERE username = ? AND actif = 1',
+      'SELECT ID as id, nom, username, typeAdmin, actif, password FROM Admin WHERE username = ? AND actif = 1',
       [username]
     );
 
@@ -24,27 +24,56 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const admin = rows[0];
 
-    // Assuming plain text passwords as user hasn't clarified.
-    // If bcrypt is needed later, we can add: await bcrypt.compare(password, admin.password);
+    // Verification du mot de passe en clair (selon la maquette)
     if (admin.password !== password) {
       return next(new AppError('Invalid credentials', 401));
     }
 
+    // Map typeAdmin to roles
+    // Example: 1 = fondateur, 2 = directeur, etc.
+    let mappedRole = 'parent';
+    if (admin.typeAdmin === 1) mappedRole = 'fondateur';
+    else if (admin.typeAdmin === 2) mappedRole = 'directeur';
+    else if (admin.typeAdmin === 3) mappedRole = 'admin_scolarite';
+    else if (admin.typeAdmin === 4) mappedRole = 'admin_auditeur';
+    else mappedRole = 'fondateur'; // Fallback for testing
+
+    // Role-based permissions mapping
+    let permissions: string[] = [];
+    if (mappedRole === 'fondateur') permissions = ['dashboard', 'scolarite', 'finance', 'admin', 'routes', 'evaluations', 'audit'];
+    else if (mappedRole === 'directeur') permissions = ['dashboard', 'scolarite', 'finance', 'admin', 'evaluations'];
+    else if (mappedRole === 'admin_scolarite') permissions = ['dashboard', 'scolarite', 'evaluations'];
+    else if (mappedRole === 'admin_auditeur') permissions = ['dashboard', 'audit'];
+    else if (mappedRole === 'parent') permissions = ['parent_dashboard'];
+    else if (mappedRole === 'enseignant') permissions = ['enseignant_dashboard', 'evaluations'];
+    else if (mappedRole === 'administratif') permissions = ['administratif_dashboard', 'finance'];
+
+    const tokenPayload = {
+      sub: admin.id,
+      username: admin.username,
+      role: mappedRole
+    };
+
     const token = jwt.sign(
-      { id: admin.ID, role: 'admin' },
+      tokenPayload,
       (process.env.JWT_SECRET || 'fallback_secret') as string,
       { expiresIn: (process.env.JWT_EXPIRES_IN || '1d') as any }
     );
 
-    // Remove password from response
-    delete admin.password;
+    // Prepare response user
+    const responseUser = {
+      id: admin.id,
+      nom: admin.nom,
+      username: admin.username,
+      role: mappedRole,
+      permissions
+    };
 
     res.status(200).json({
       success: true,
-      message: 'Logged in successfully',
       data: {
-        user: admin,
-        token
+        token,
+        user: responseUser
       }
     });
 

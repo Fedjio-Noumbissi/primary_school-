@@ -1,391 +1,271 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, AreaChart, Area,
-} from 'recharts';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import api from '../api/axios';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// ── Design tokens (mirror Sidebar & BaseLayout) ───────────────────────────────
-// Font: Sora + JetBrains Mono  |  Accent: #059669 / #34d399
-// Card bg: white  |  Page bg: #f4f6f5  |  Text-primary: #0d1117
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-const IconUsers = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19 }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
-const IconGrad = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19 }}><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>;
-const IconBuilding = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19 }}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>;
-const IconCard = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19 }}><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>;
-const IconCalendar = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
-const IconArrowUp = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11 }}><polyline points="18 15 12 9 6 15" /></svg>;
-const IconArrowRight = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}><polyline points="9 18 15 12 9 6" /></svg>;
-
-// ── Data ──────────────────────────────────────────────────────────────────────
-const payData = [
-  { mois: 'Jan', paiements: 8400, objectif: 9000 },
-  { mois: 'Fév', paiements: 7200, objectif: 9000 },
-  { mois: 'Mar', paiements: 9100, objectif: 9000 },
-  { mois: 'Avr', paiements: 7800, objectif: 9000 },
-  { mois: 'Mai', paiements: 6500, objectif: 9000 },
-  { mois: 'Juin', paiements: 10200, objectif: 9000 },
-  { mois: 'Juil', paiements: 8900, objectif: 9000 },
-];
-
-const areaData = [
-  { mois: 'Sep', eleves: 980 }, { mois: 'Oct', eleves: 1050 },
-  { mois: 'Nov', eleves: 1100 }, { mois: 'Déc', eleves: 1080 },
-  { mois: 'Jan', eleves: 1190 }, { mois: 'Fév', eleves: 1245 },
-];
-
-const recentStudents = [
-  { name: 'Amina Koné', classe: 'Terminale A', date: "Aujourd'hui", status: 'nouveau' },
-  { name: 'Jean-Baptiste Mballa', classe: '3ème B', date: 'Hier', status: 'nouveau' },
-  { name: 'Fatou Diallo', classe: '2nde C', date: '22 avr.', status: 'transfert' },
-  { name: 'Serge Atangana', classe: '1ère D', date: '21 avr.', status: 'nouveau' },
-  { name: 'Marie-Claire Nguema', classe: 'CM2', date: '20 avr.', status: 'transfert' },
-];
-
-const alerts = [
-  { text: '14 paiements en retard de plus de 30 jours', type: 'danger' },
-  { text: '3 salles non assignées pour le prochain trimestre', type: 'warn' },
-  { text: 'Clôture du trimestre dans 8 jours', type: 'info' },
-];
-
-const quickStats = [
-  { label: 'Taux de paiement', value: '78%', color: '#059669' },
-  { label: 'Assiduité moy.', value: '91%', color: '#3b82f6' },
-  { label: 'Cours planifiés', value: '128', color: '#7c3aed' },
-  { label: 'Examens à venir', value: '6', color: '#f59e0b' },
-];
-
-// Avatar color palettes — sync with Sidebar/BaseLayout avatar gradient
-const avatarPalettes = [
-  { bg: '#eff6ff', color: '#3b82f6' },
-  { bg: '#ecfdf5', color: '#059669' },
-  { bg: '#f5f3ff', color: '#7c3aed' },
-  { bg: '#fff7ed', color: '#f59e0b' },
-  { bg: '#fff1f2', color: '#e11d48' },
-];
-
-// ── Custom tooltip ─────────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{
-      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12,
-      padding: '10px 14px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-      fontSize: 13, fontFamily: "'Sora', sans-serif",
-    }}>
-      <div style={{ fontWeight: 700, color: '#0d1117', marginBottom: 6 }}>{label}</div>
-      {payload.map((p: any, i: number) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', marginTop: 3 }}>
-          <span style={{ width: 8, height: 8, borderRadius: 3, background: p.color, display: 'inline-block' }} />
-          {p.name === 'paiements' ? 'Paiements' : p.name === 'objectif' ? 'Objectif' : 'Élèves'} :&nbsp;
-          <strong style={{ color: '#0d1117' }}>
-            {p.name !== 'eleves' ? `${(p.value / 1000).toFixed(1)}k FCFA` : p.value}
-          </strong>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ── Component ─────────────────────────────────────────────────────────────────
 export const Dashboard = () => {
-  const [mounted, setMounted] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('6M');
+  const navigate = useNavigate();
+  const [periode, setPeriode] = useState<'3m' | '6m' | '1a'>('6m');
 
-  useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
-
-  const stats = [
-    { label: 'Total Élèves', value: '1 245', delta: '+3.2%', icon: <IconUsers />, accent: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-    { label: 'Enseignants', value: '84', delta: '+1', icon: <IconGrad />, accent: '#059669', bg: '#ecfdf5', border: '#6ee7b7' },
-    { label: 'Classes Actives', value: '32', delta: '±0', icon: <IconBuilding />, accent: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd' },
-    { label: 'Paiements / mois', value: '12M FCFA', delta: '+8.4%', icon: <IconCard />, accent: '#e11d48', bg: '#fff1f2', border: '#fecdd3' },
-  ];
+  const { data: chartData = [] } = useQuery({
+    queryKey: ['financeStats', periode],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/finance/stats?periode=${periode}`);
+        return res.data.data || [];
+      } catch {
+        // Fallback data if endpoint doesn't exist
+        return [
+          { name: 'Jan', paiements: 1500000, depenses: 800000 },
+          { name: 'Fév', paiements: 2200000, depenses: 950000 },
+          { name: 'Mar', paiements: 1800000, depenses: 850000 },
+        ];
+      }
+    }
+  });
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-        /* ── Base ── */
-        .db { padding: 28px 32px 48px; background: #f4f6f5; min-height: 100%; font-family: 'Sora', sans-serif; }
-
-        /* ── Page header ── */
-        .db-ph { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-        .db-title { font-size: 22px; font-weight: 700; color: #0d1117; letter-spacing: -0.6px; font-family: 'Sora', sans-serif; }
-        .db-date { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #9ca3af; margin-top: 4px; }
-        .db-year-badge {
-          font-size: 11.5px; font-weight: 500;
-          background: linear-gradient(135deg, #059669, #047857);
-          color: white; padding: 4px 12px; border-radius: 20px;
-          letter-spacing: 0.1px;
-          box-shadow: 0 2px 8px rgba(5,150,105,0.25);
-        }
-
-        /* ── Cards ── */
-        .db-card {
-          background: white; border-radius: 16px;
-          border: 1px solid rgba(0,0,0,0.06);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
-        }
-        .db-card-inner { padding: 22px 24px; }
-
-        /* ── Stats grid ── */
-        .db-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .db-stat {
-          opacity: 0; transform: translateY(14px);
-          transition: opacity 0.38s ease, transform 0.38s ease, box-shadow 0.2s;
-        }
-        .db-stat.vis { opacity: 1; transform: translateY(0); }
-        .db-stat:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
-        .db-stat-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
-        .db-stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .db-stat-delta {
-          display: flex; align-items: center; gap: 4px;
-          font-size: 11.5px; font-weight: 600;
-          padding: 3px 9px; border-radius: 20px;
-          background: #ecfdf5; color: #059669;
-        }
-        .db-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; color: #0d1117; letter-spacing: -1px; line-height: 1; }
-        .db-stat-lbl { font-size: 12px; color: #9ca3af; margin-top: 5px; font-weight: 400; }
-
-        /* ── Charts row ── */
-        .db-charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
-        @media (min-width: 860px) { .db-charts { grid-template-columns: 2fr 1fr; } }
-
-        .db-card-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
-        .db-card-title { font-size: 14.5px; font-weight: 700; color: #0d1117; letter-spacing: -0.3px; }
-        .db-card-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-
-        .db-filters { display: flex; gap: 3px; background: #f3f4f6; border-radius: 9px; padding: 3px; }
-        .db-filter {
-          padding: 4px 11px; font-size: 12px; font-weight: 500; border: none;
-          background: none; border-radius: 7px; cursor: pointer; color: #6b7280;
-          font-family: 'Sora', sans-serif; transition: all 0.15s;
-        }
-        .db-filter.active { background: white; color: #059669; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-
-        .db-legend { display: flex; gap: 16px; margin-top: 14px; justify-content: center; }
-        .db-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
-        .db-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-        /* Big number */
-        .db-bignum { font-family: 'JetBrains Mono', monospace; font-size: 38px; font-weight: 700; color: #0d1117; letter-spacing: -2px; margin: 16px 0 6px; line-height: 1; }
-        .db-growth { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #059669; background: #ecfdf5; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; }
-
-        /* ── Bottom row ── */
-        .db-bottom { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        @media (min-width: 860px) { .db-bottom { grid-template-columns: 1.5fr 1fr; } }
-
-        /* Students */
-        .db-student { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f9fafb; }
-        .db-student:last-child { border-bottom: none; }
-        .db-s-av { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; font-family: 'Sora', sans-serif; }
-        .db-s-name { font-size: 13.5px; font-weight: 600; color: #111827; }
-        .db-s-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-        .db-s-badge { font-size: 10.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; margin-left: auto; }
-        .see-all { font-size: 12px; color: #059669; background: none; border: 1px solid #6ee7b7; border-radius: 8px; padding: 5px 13px; cursor: pointer; font-family: 'Sora', sans-serif; font-weight: 500; display: flex; align-items: center; gap: 4px; transition: all 0.15s; }
-        .see-all:hover { background: #ecfdf5; border-color: #34d399; }
-
-        /* Alerts */
-        .db-alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; line-height: 1.45; }
-        .db-alert:last-child { margin-bottom: 0; }
-        .db-alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-
-        /* Quick stats */
-        .db-qs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .db-qs-item { background: #f9fafb; border-radius: 11px; padding: 12px 14px; border: 1px solid rgba(0,0,0,0.05); }
-        .db-qs-val { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; line-height: 1; }
-        .db-qs-lbl { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
-
-      <div className="db">
-
-        {/* ── Page header ── */}
-        <div className="db-ph">
-          <div>
-            <div className="db-title">Tableau de bord</div>
-            <div className="db-date">
-              <IconCalendar />
-              Vendredi 25 avril 2025 · Année académique 2024–2025
-            </div>
-          </div>
-          <div className="db-year-badge">2024–2025</div>
-        </div>
-
-        {/* ── Stat cards ── */}
-        <div className="db-stats">
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              className={`db-card db-stat${mounted ? ' vis' : ''}`}
-              style={{ transitionDelay: `${i * 75}ms` }}
-            >
-              <div className="db-card-inner">
-                <div className="db-stat-top">
-                  <div className="db-stat-icon" style={{ background: s.bg, color: s.accent, border: `1px solid ${s.border}` }}>
-                    {s.icon}
-                  </div>
-                  <div className="db-stat-delta">
-                    <IconArrowUp />
-                    {s.delta}
-                  </div>
-                </div>
-                <div className="db-stat-val">{s.value}</div>
-                <div className="db-stat-lbl">{s.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Charts ── */}
-        <div className="db-charts">
-
-          {/* Bar chart */}
-          <div className="db-card" style={{ animation: mounted ? 'fadeUp 0.45s ease 0.32s both' : 'none' }}>
-            <div className="db-card-inner">
-              <div className="db-card-hd">
-                <div>
-                  <div className="db-card-title">Évolution des paiements</div>
-                  <div className="db-card-sub">Comparaison mensuelle vs objectif</div>
-                </div>
-                <div className="db-filters">
-                  {['3M', '6M', '1A'].map(f => (
-                    <button key={f} className={`db-filter${activeFilter === f ? ' active' : ''}`} onClick={() => setActiveFilter(f)}>{f}</button>
-                  ))}
-                </div>
-              </div>
-              <ResponsiveContainer width="100%" height={230}>
-                <BarChart data={payData} barGap={5}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af', fontFamily: 'Sora' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af', fontFamily: 'Sora' }} tickFormatter={v => `${v / 1000}k`} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)', radius: 6 }} />
-                  <Bar dataKey="paiements" fill="#059669" radius={[7, 7, 0, 0]} maxBarSize={34} />
-                  <Bar dataKey="objectif" fill="#d1fae5" radius={[7, 7, 0, 0]} maxBarSize={34} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="db-legend">
-                {[['#059669', 'Paiements reçus'], ['#d1fae5', 'Objectif']].map(([c, l]) => (
-                  <div key={l} className="db-legend-item">
-                    <span className="db-legend-dot" style={{ background: c }} />{l}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Area chart */}
-          <div className="db-card" style={{ animation: mounted ? 'fadeUp 0.45s ease 0.44s both' : 'none' }}>
-            <div className="db-card-inner">
-              <div className="db-card-hd">
-                <div>
-                  <div className="db-card-title">Effectif élèves</div>
-                  <div className="db-card-sub">Progression depuis sept.</div>
-                </div>
-              </div>
-              <div className="db-bignum">1 245</div>
-              <div className="db-growth">
-                <IconArrowUp /> 27.0% depuis le début d'année
-              </div>
-              <ResponsiveContainer width="100%" height={140}>
-                <AreaChart data={areaData}>
-                  <defs>
-                    <linearGradient id="elGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#059669" stopOpacity={0.16} />
-                      <stop offset="100%" stopColor="#059669" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af', fontFamily: 'Sora' }} />
-                  <YAxis hide domain={['dataMin - 50', 'dataMax + 50']} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="eleves" stroke="#059669" strokeWidth={2.5} fill="url(#elGrad)" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Bottom row ── */}
-        <div className="db-bottom">
-
-          {/* Recent students */}
-          <div className="db-card" style={{ animation: mounted ? 'fadeUp 0.45s ease 0.54s both' : 'none' }}>
-            <div className="db-card-inner">
-              <div className="db-card-hd">
-                <div>
-                  <div className="db-card-title">Dernières inscriptions</div>
-                  <div className="db-card-sub">Élèves récemment enregistrés</div>
-                </div>
-                <button className="see-all">Voir tout <IconArrowRight /></button>
-              </div>
-              {recentStudents.map((s, i) => {
-                const initials = s.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                const pal = avatarPalettes[i % avatarPalettes.length];
-                return (
-                  <div className="db-student" key={i}>
-                    <div className="db-s-av" style={{ background: pal.bg, color: pal.color }}>{initials}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="db-s-name">{s.name}</div>
-                      <div className="db-s-meta">{s.classe} · {s.date}</div>
-                    </div>
-                    <div
-                      className="db-s-badge"
-                      style={s.status === 'nouveau'
-                        ? { background: '#ecfdf5', color: '#059669' }
-                        : { background: '#eff6ff', color: '#3b82f6' }}
-                    >
-                      {s.status === 'nouveau' ? 'Nouveau' : 'Transfert'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Alerts + Quick stats */}
-          <div className="db-card" style={{ animation: mounted ? 'fadeUp 0.45s ease 0.64s both' : 'none' }}>
-            <div className="db-card-inner">
-              <div className="db-card-hd">
-                <div>
-                  <div className="db-card-title">Alertes & rappels</div>
-                  <div className="db-card-sub">Actions requises</div>
-                </div>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#ef4444', fontFamily: 'Sora' }}>
-                  {alerts.length}
-                </div>
-              </div>
-
-              {alerts.map((a, i) => {
-                const s = {
-                  danger: { bg: '#fff1f2', border: '#fecdd3', dot: '#ef4444', text: '#9f1239' },
-                  warn: { bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b', text: '#92400e' },
-                  info: { bg: '#eff6ff', border: '#bfdbfe', dot: '#3b82f6', text: '#1e40af' },
-                }[a.type as 'danger' | 'warn' | 'info'];
-                return (
-                  <div key={i} className="db-alert" style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.text }}>
-                    <span className="db-alert-dot" style={{ background: s.dot }} />
-                    {a.text}
-                  </div>
-                );
-              })}
-
-              <div className="db-qs">
-                {quickStats.map((q, i) => (
-                  <div className="db-qs-item" key={i}>
-                    <div className="db-qs-val" style={{ color: q.color }}>{q.value}</div>
-                    <div className="db-qs-lbl">{q.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
+    <div className="p-4 lg:p-8 font-sora bg-[#f4f6f8] min-h-screen text-gray-800">
+      
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Direction Générale</h1>
+          <p className="text-sm text-gray-500 mt-1">Vue globale de l'établissement</p>
         </div>
       </div>
-    </>
+
+      <div className="flex flex-col xl:flex-row gap-6">
+        {/* Left Column (Main) */}
+        <div className="flex-1 space-y-6 min-w-0">
+          
+          {/* Tabs */}
+          <div className="flex items-center space-x-4 mb-2">
+            <span className="text-gray-800 font-semibold text-lg">Indicateurs <span className="text-gray-400 font-normal">/ Clés</span></span>
+            <div className="flex space-x-1 bg-white rounded-full p-1 shadow-sm">
+              <button className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+              <button className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-700"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg></button>
+            </div>
+          </div>
+
+          {/* Cards Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-orange-100 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 mb-6">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-[13px] mb-1">Élèves Inscrits</p>
+                <p className="text-2xl font-bold text-gray-800"><span className="text-orange-500">580</span></p>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-emerald-100 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-[13px] mb-1">Taux de Réussite</p>
+                <p className="text-2xl font-bold text-gray-800"><span className="text-emerald-600">89%</span></p>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-gray-200 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-800 mb-6">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-[13px] mb-1">Employés</p>
+                <p className="text-2xl font-bold text-gray-800">42</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-[13px] font-bold text-gray-800">Capacité d'accueil</h3>
+                 <button className="text-gray-300 hover:text-gray-500"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg></button>
+               </div>
+               <div className="space-y-3">
+                 <div className="flex items-center justify-between">
+                   <span className="text-[11px] font-semibold text-gray-600 w-20">Occupé</span>
+                   <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden mx-2"><div className="bg-orange-400 h-full w-[95%] rounded-full"></div></div>
+                   <span className="text-[11px] text-gray-400 font-medium w-8 text-right">95%</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-[11px] font-semibold text-gray-600 w-20">Disponible</span>
+                   <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden mx-2"><div className="bg-emerald-600 h-full w-[5%] rounded-full"></div></div>
+                   <span className="text-[11px] text-gray-400 font-medium w-8 text-right">5%</span>
+                 </div>
+               </div>
+            </div>
+          </div>
+
+          {/* Chart Area */}
+          <div className="bg-white p-6 rounded-[24px] shadow-sm h-[320px] flex flex-col relative">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-gray-800">Évolution financière</h2>
+              <div className="flex bg-gray-100 p-1 rounded-lg">
+                <button 
+                  onClick={() => setPeriode('3m')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${periode === '3m' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >3M</button>
+                <button 
+                  onClick={() => setPeriode('6m')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${periode === '6m' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >6M</button>
+                <button 
+                  onClick={() => setPeriode('1a')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${periode === '1a' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >1A</button>
+              </div>
+            </div>
+            
+            <div className="flex-1 w-full min-h-0 relative z-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9ca3af', fontWeight: 500}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9ca3af', fontWeight: 500}} tickFormatter={(val) => `${val / 1000}k`} />
+                  <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'}} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
+                  <Bar dataKey="paiements" name="Paiements" fill="#059669" radius={[4, 4, 0, 0]} barSize={12} />
+                  <Bar dataKey="depenses" name="Dépenses" fill="#fb923c" radius={[4, 4, 0, 0]} barSize={12} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Table Area */}
+          <div className="bg-white p-6 rounded-[24px] shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-gray-800">Dernières inscriptions</h2>
+              <button 
+                onClick={() => navigate('/scolarite/eleves?sort=recent')}
+                className="text-[12px] text-gray-500 hover:text-emerald-600 bg-gray-50 hover:bg-emerald-50 px-3 py-1.5 rounded-full font-medium transition-colors"
+              >
+                Voir tout
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[600px]">
+                <thead>
+                  <tr className="text-[12px] text-gray-400 border-b border-gray-100">
+                    <th className="pb-3 font-medium px-2">Acteur</th>
+                    <th className="pb-3 font-medium px-2">Type d'action</th>
+                    <th className="pb-3 font-medium px-2">Service</th>
+                    <th className="pb-3 font-medium px-2">Heure</th>
+                    <th className="pb-3 font-medium px-2">Statut</th>
+                    <th className="pb-3 font-medium px-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="text-[13px]">
+                  <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 px-2 flex items-center">
+                      <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold mr-3">DA</div>
+                      <div>
+                        <p className="font-semibold text-gray-800">Direction</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Administratif</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-gray-500">Validation Budgétaire</td>
+                    <td className="py-3 px-2 text-gray-500">Finance</td>
+                    <td className="py-3 px-2 text-gray-500 font-medium">14:20</td>
+                    <td className="py-3 px-2">
+                      <span className="text-emerald-600 text-[11px] bg-emerald-50 px-2 py-1 rounded-full font-medium">Effectué</span>
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      <button className="text-gray-400 hover:text-orange-500 transition-colors">Détails</button>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 px-2 flex items-center">
+                      <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3">SP</div>
+                      <div>
+                        <p className="font-semibold text-gray-800">Scolarité</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Inscription</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-gray-500">Nouveau Dossier</td>
+                    <td className="py-3 px-2 text-gray-500">Scolarité</td>
+                    <td className="py-3 px-2 text-gray-500 font-medium">11:05</td>
+                    <td className="py-3 px-2">
+                      <span className="text-emerald-600 text-[11px] bg-emerald-50 px-2 py-1 rounded-full font-medium">Effectué</span>
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      <button className="text-gray-400 hover:text-blue-500 transition-colors">Détails</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="w-full xl:w-[340px] space-y-6 flex-shrink-0">
+          
+          {/* Agenda */}
+          <div className="bg-white p-6 rounded-[24px] shadow-sm">
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-[15px] font-bold text-gray-800">Agenda Direction</h2>
+            </div>
+            <p className="text-[11px] text-gray-400 mb-6">Réunions et événements clés</p>
+            
+            {/* Calendar Widget */}
+            <div className="grid grid-cols-5 gap-1.5 mb-8">
+              {[{d:22,m:'Sep'}, {d:23,m:'Sep', active:true}, {d:24,m:'Sep'}, {d:25,m:'Sep'}, {d:26,m:'Sep'},
+                {d:27,m:'Sep'}, {d:28,m:'Sep'}, {d:29,m:'Sep'}, {d:30,m:'Sep'}, {d:'01',m:'Oct'}].map((day, i) => (
+                <div key={i} className={`flex flex-col items-center justify-center py-2.5 rounded-[14px] text-[11px] transition-colors ${day.active ? 'bg-orange-400 text-white shadow-lg shadow-orange-200' : 'text-gray-400 hover:bg-gray-50 cursor-pointer'}`}>
+                  <span className={`font-bold text-[13px] mb-0.5 ${day.active ? 'text-white' : 'text-gray-700'}`}>{day.d}</span>
+                  <span>{day.m}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Schedule List */}
+            <div className="space-y-5">
+              {[
+                {name: 'Conseil de discipline', role: 'Salle de réunion', time: '14:30'},
+                {name: 'Inspection', role: 'Délégation régionale', time: 'Demain'},
+              ].map((task, i) => (
+                <div key={i} className="flex items-center justify-between group">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 font-bold text-xs"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                    <div>
+                      <p className="font-bold text-[13px] text-gray-800">{task.name}</p>
+                      <p className="text-[11px] text-gray-400">{task.role}</p>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-gray-500 font-medium">
+                    {task.time}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Course Gradient Card -> Alerte Globale */}
+          <div className="bg-gradient-to-br from-[#c9a786] via-[#7d9b7b] to-[#25654b] p-6 rounded-[24px] text-white shadow-xl shadow-emerald-900/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-900 opacity-20 rounded-full blur-2xl transform -translate-x-10 translate-y-10"></div>
+            
+            <div className="flex justify-between items-center mb-10 relative z-10">
+              <h3 className="font-semibold text-sm">Action Requise</h3>
+              <button className="text-[11px] bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full transition-colors font-medium">Voir le rapport</button>
+            </div>
+            
+            <div className="relative z-10 mb-6">
+              <h2 className="text-2xl font-bold mb-2">Renouvellement Licences</h2>
+              <p className="text-[11px] text-white/80 leading-relaxed font-light">Les licences logicielles éducatives arrivent à expiration dans 15 jours.</p>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 relative z-10">
+              <span className="text-[10px] font-medium bg-white/20 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-md flex items-center"><svg className="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Échéance : 10 Oct</span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
   );
 };

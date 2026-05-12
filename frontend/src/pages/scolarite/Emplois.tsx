@@ -11,10 +11,11 @@ export const Emplois = () => {
         icon: <CalendarRange />,
         primaryKey: 'idTemps',
         columns: [
-          { key: 'jour', label: 'Jour' },
-          { key: 'heure', label: 'Heure' },
-          { key: 'idClasse', label: 'ID Classe' },
-          { key: 'idCours', label: 'ID Cours' }
+          { key: 'jour', label: 'Jour', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
+          { key: 'heure', label: 'Heure', render: (val) => <span style={{ color: '#059669', fontWeight: 500 }}>{val || 'N/A'}</span> },
+          { key: 'idClasse', label: 'ID Classe', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },
+          { key: 'idCours', label: 'ID Cours', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },
+          { key: 'idAdmin', label: 'ID Admin', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
           { name: 'idClasse', label: 'ID Classe', type: 'number', required: true },
@@ -33,7 +34,8 @@ export const Emplois = () => {
             ],
             required: true 
           },
-          { name: 'heure', label: 'Heure (ex: 08:00 - 10:00)', type: 'text', required: true }
+          { name: 'heure', label: 'Heure (ex: 08:00)', type: 'text', required: true },
+          { name: 'idAdmin', label: 'ID Admin', type: 'number' }
         ]
       }}
     />

@@ -1,4 +1,4 @@
-import { BookOpen } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Disciplines = () => {
@@ -7,16 +7,16 @@ export const Disciplines = () => {
       config={{
         endpoint: '/parametres/disciplines',
         title: 'Disciplines',
-        subtitle: 'Gestion des matières enseignées',
-        icon: <BookOpen />,
+        subtitle: 'Barème disciplinaire de l\'établissement',
+        icon: <Scale />,
         primaryKey: 'ID',
         columns: [
-          { key: 'libelle', label: 'Libellé' },
-          { key: 'points', label: 'Points/Coefficient' }
+          { key: 'libelle', label: 'Discipline', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
+          { key: 'points', label: 'Points', render: (val) => <span style={{ color: val > 0 ? '#059669' : '#e11d48', fontWeight: 600 }}>{val ?? 'N/A'}</span> }
         ],
         fields: [
-          { name: 'libelle', label: 'Libellé de la discipline', type: 'text', required: true },
-          { name: 'points', label: 'Points/Catégorie', type: 'number' }
+          { name: 'libelle', label: 'Libellé (ex: Absences, Conduite)', type: 'text', required: true },
+          { name: 'points', label: 'Points attribués', type: 'number', required: true }
         ]
       }}
     />

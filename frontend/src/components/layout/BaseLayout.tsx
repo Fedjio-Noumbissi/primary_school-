@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Sidebar } from './Sidebar';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '../../api/axios';
+import toast from 'react-hot-toast';
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const IconBell = () => (
@@ -26,13 +29,15 @@ const IconMenu = () => (
   </svg>
 );
 
-// ── Notification data ─────────────────────────────────────────────────────────
-const NOTIFS = [
-  { color: '#ef4444', text: '14 paiements en retard de plus de 30 jours', time: 'Il y a 2h', read: false },
-  { color: '#f59e0b', text: 'Réunion des parents — 30 avril', time: 'Il y a 5h', read: false },
-  { color: '#3b82f6', text: 'Nouveau rapport financier disponible', time: 'Hier', read: false },
-  { color: '#10b981', text: '3 nouvelles inscriptions validées', time: 'Hier', read: true },
-];
+// ── Types ─────────────────────────────────────────────────────────
+interface NotificationItem {
+  id: number;
+  message: string;
+  type: string;
+  lien: string;
+  lue: boolean;
+  dateCreation: string;
+}
 
 // ── Header ────────────────────────────────────────────────────────────────────
 function Header({
@@ -40,16 +45,61 @@ function Header({
 }: {
   onToggle: () => void;
 }) {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [searchFocused, setSearchFocused] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? 'AD';
   const displayName = user?.nom ?? user?.username ?? 'Administrateur';
-  const unread = NOTIFS.filter(n => !n.read).length;
+  
+  // ── Queries & Mutations ──────────────────────────────────────────────────
+  const { data: notifications = [] } = useQuery<NotificationItem[]>({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/notifications?limit=10');
+        return res.data.data || [];
+      } catch {
+        return [];
+      }
+    },
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async () => {
+      await api.patch('/notifications/read-all');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }
+  });
+
+  const unread = notifications.filter(n => !n.lue).length;
+
+  const handleOpenNotifs = () => {
+    setNotifOpen(o => !o);
+    setProfileOpen(false);
+    if (!notifOpen && unread > 0) {
+      markAsReadMutation.mutate();
+    }
+  };
+
+  const handleNotifClick = (lien?: string) => {
+    setNotifOpen(false);
+    if (lien) navigate(lien);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Vous avez été déconnecté');
+    navigate('/login', { replace: true });
+  };
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -227,7 +277,7 @@ function Header({
         <div className="hd-right">
           {/* Notifications */}
           <div style={{ position: 'relative' }} ref={notifRef}>
-            <button className="hd-notif-btn" onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}>
+            <button className="hd-notif-btn" onClick={handleOpenNotifs}>
               <IconBell />
               {unread > 0 && <span className="hd-notif-badge" />}
             </button>
@@ -235,17 +285,23 @@ function Header({
               <div className="hd-dropdown">
                 <div className="hd-drop-hd">
                   <span className="hd-drop-title">Notifications</span>
-                  <span className="hd-drop-badge">{unread} nouvelles</span>
+                  {unread > 0 && <span className="hd-drop-badge">{unread} nouvelles</span>}
                 </div>
-                {NOTIFS.map((n, i) => (
-                  <div key={i} className={`hd-notif-item${!n.read ? ' unread' : ''}`}>
-                    <span className="hd-notif-dot" style={{ background: n.color }} />
-                    <div>
-                      <div className="hd-notif-txt">{n.text}</div>
-                      <div className="hd-notif-time">{n.time}</div>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: '#6b7280' }}>
+                    Aucune notification.
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} className={`hd-notif-item${!n.lue ? ' unread' : ''}`} onClick={() => handleNotifClick(n.lien)}>
+                      <span className="hd-notif-dot" style={{ background: n.type === 'error' ? '#ef4444' : n.type === 'warning' ? '#f59e0b' : '#3b82f6' }} />
+                      <div>
+                        <div className="hd-notif-txt">{n.message}</div>
+                        <div className="hd-notif-time">{new Date(n.dateCreation).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -264,10 +320,10 @@ function Header({
             </button>
             {profileOpen && (
               <div className="hd-profile-drop">
-                <div className="hd-pdrop-item">Mon profil</div>
-                <div className="hd-pdrop-item">Préférences</div>
+                <div className="hd-pdrop-item" onClick={() => { navigate('/profil'); setProfileOpen(false); }}>Mon profil</div>
+                <div className="hd-pdrop-item" onClick={() => { navigate('/preferences'); setProfileOpen(false); }}>Préférences</div>
                 <div className="hd-pdrop-sep" />
-                <div className="hd-pdrop-item danger">Déconnexion</div>
+                <div className="hd-pdrop-item danger" onClick={handleLogout}>Déconnexion</div>
               </div>
             )}
           </div>

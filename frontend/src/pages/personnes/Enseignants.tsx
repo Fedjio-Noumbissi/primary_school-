@@ -11,18 +11,19 @@ export const Enseignants = () => {
         icon: <Briefcase />,
         primaryKey: 'idEnseignant',
         columns: [
-          { key: 'idPers', label: 'ID Personne' },
-          { key: 'idCours', label: 'Matière d\'ancrage (ID Cours)' },
+          { key: 'idEnseignant', label: 'ID', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val).padStart(4, '0')}</span> },
+          { key: 'idPers', label: 'ID Personne', render: (val) => <span style={{ color: '#374151', fontWeight: 600 }}>{val || 'N/A'}</span> },
+          { key: 'idCours', label: 'ID Cours', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },
           { key: 'Actif', label: 'Statut', render: (val) => (
-            <span className={val ? 'pt-badge-green' : 'pt-badge-red'}>
-              {val ? 'En Service' : 'Ancien'}
-            </span>
-          )}
+            <span className={val ? 'pt-badge-green' : 'pt-badge-red'}>{val ? 'Actif' : 'Inactif'}</span>
+          )},
+          { key: 'idAdmin', label: 'ID Admin', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
-          { name: 'idPers', label: 'Identifiant Profil Personne', type: 'number', required: true },
-          { name: 'idCours', label: 'ID Cours Principal (Matière enseignée)', type: 'number' },
-          { name: 'Actif', label: 'Est en activité cette année', type: 'checkbox' }
+          { name: 'idPers', label: 'ID Personne (profil lié)', type: 'number', required: true },
+          { name: 'idCours', label: 'ID Cours (matière principale)', type: 'number', required: true },
+          { name: 'idAdmin', label: 'ID Admin', type: 'number' },
+          { name: 'Actif', label: 'Enseignant actuellement actif', type: 'checkbox' }
         ]
       }}
     />

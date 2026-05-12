@@ -377,7 +377,7 @@ export const Welcome = () => {
               <div className="ping-outer" />
               <div className="ping-inner" />
             </div>
-            EduPrime v2.0 est disponible
+            CogniSchool v2.0 est disponible
           </div>
 
           <h1 className={`hero-h1${mounted ? ' vis' : ''}`}>
@@ -474,7 +474,7 @@ export const Welcome = () => {
           <div style={{ maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: 20, padding: '36px 40px', border: '1px solid #f0f0f0', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
             <div className="stars">{[...Array(5)].map((_, i) => <IconStar key={i} />)}</div>
             <p style={{ fontSize: 17, color: '#374151', lineHeight: 1.65, fontStyle: 'italic', marginBottom: 24, fontWeight: 300 }}>
-              "EduPrime a transformé notre gestion scolaire. Ce qui prenait une journée entière ne prend plus que quelques minutes. Une solution vraiment pensée pour nous."
+              "CogniSchool a transformé notre gestion scolaire. Ce qui prenait une journée entière ne prend plus que quelques minutes. Une solution vraiment pensée pour nous."
             </p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
               <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg,#ecfdf5,#6ee7b7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#059669' }}>DM</div>
@@ -492,7 +492,7 @@ export const Welcome = () => {
             <div className="cta-grid" />
             <h2 className="cta-h2">Prêt à moderniser votre école ?</h2>
             <p className="cta-p">
-              Rejoignez les établissements qui font confiance à EduPrime pour leur gestion quotidienne.
+              Rejoignez les établissements qui font confiance à CogniSchool pour leur gestion quotidienne.
             </p>
             <Link to="/login" className="cta-btn">
               Accéder à la plateforme <IconArrow />
@@ -502,8 +502,8 @@ export const Welcome = () => {
 
         {/* ── Footer ── */}
         <footer className="footer">
-          <div className="footer-brand">EduPrime</div>
-          <div className="footer-copy">© 2025 EduPrime. Tous droits réservés.</div>
+          <div className="footer-brand">CogniSchool</div>
+          <div className="footer-copy">© 2025 CogniSchool. Tous droits réservés.</div>
           <div style={{ display: 'flex', gap: 16 }}>
             {['Confidentialité', 'CGU', 'Support'].map(l => (
               <a key={l} href="#" style={{ fontSize: 12, color: '#9ca3af', textDecoration: 'none' }}>{l}</a>

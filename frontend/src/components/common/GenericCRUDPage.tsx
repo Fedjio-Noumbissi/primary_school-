@@ -547,6 +547,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
+  const [selectedIds, setSelectedIds] = useState<Set<any>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
@@ -578,8 +579,9 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
         const val = payload[f.name];
         if (val === '' || val === undefined) {
            sanitizedPayload[f.name] = null;
-        } else if (f.type === 'number' && val !== null) {
-           sanitizedPayload[f.name] = Number(val);
+        } else if ((f.type === 'number' || f.type === 'select') && val !== null && val !== '') {
+           // Coerce to number if the string is purely numeric
+           sanitizedPayload[f.name] = (!isNaN(Number(val))) ? Number(val) : val;
         } else {
            sanitizedPayload[f.name] = val;
         }
@@ -600,9 +602,9 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
       const respData = err.response?.data;
       let errMsg = respData?.message || err.message;
       if (respData?.errors && Array.isArray(respData.errors)) {
-        errMsg += '\\n' + respData.errors.map((e: any) => `- ${e.path}: ${e.message}`).join('\\n');
+        errMsg += '\n' + respData.errors.map((e: any) => `- ${e.path}: ${e.message}`).join('\n');
       }
-      alert("Erreur lors de l'enregistrement :\\n" + errMsg);
+      alert("Erreur lors de l'enregistrement :\n" + errMsg);
     }
   });
 
@@ -627,6 +629,22 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
 
   const totalPages = data?.pagination?.totalPages ?? 1;
   const currentPage = data?.pagination?.page ?? page;
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked && data?.data) {
+      setSelectedIds(new Set(data.data.map((item: any) => item[config.primaryKey])));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: any) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+  const allSelected = data?.data?.length > 0 && selectedIds.size === data.data.length;
 
   const headerActions = (
     <button
@@ -657,30 +675,39 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
 
         /* ── Table ── */
         .gc-root { padding: 28px 32px 48px; font-family: 'Sora', sans-serif; animation: gc-fadein 0.32s ease; }
-        .gc-card { background: white; border-radius: 18px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.03); overflow: hidden; }
+        .gc-card { background: white; border-radius: 20px; border: none; box-shadow: 0 4px 30px rgba(0,0,0,0.03); overflow: hidden; }
 
         /* Toolbar */
-        .gc-toolbar { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; }
-        .gc-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 200px; max-width: 380px; background: #f9fafb; border: 1.5px solid rgba(0,0,0,0.07); border-radius: 11px; padding: 0 14px; height: 38px; transition: all 0.18s; }
-        .gc-search:focus-within { background: white; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+        .gc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 24px 32px 16px; flex-wrap: wrap; }
+        .gc-toolbar-title { font-size: 17px; font-weight: 700; color: #111827; }
+        .gc-search { display: flex; align-items: center; gap: 9px; min-width: 200px; width: 280px; background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 12px; padding: 0 16px; height: 42px; transition: all 0.18s; }
+        .gc-search:focus-within { background: white; border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147,51,234,0.1); }
         .gc-search input { flex: 1; background: none; border: none; outline: none; font-size: 13px; color: #111827; font-family: 'Sora', sans-serif; }
         .gc-search input::placeholder { color: #9ca3af; }
         .gc-search-icon { color: #9ca3af; flex-shrink: 0; transition: color 0.18s; }
-        .gc-search:focus-within .gc-search-icon { color: #059669; }
+        .gc-search:focus-within .gc-search-icon { color: #9333ea; }
         .gc-count { margin-left: auto; font-size: 12.5px; color: #9ca3af; white-space: nowrap; }
         .gc-count strong { color: #374151; font-weight: 600; }
 
         /* Table */
         .gc-table-wrap { overflow-x: auto; }
         .gc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-family: 'Sora', sans-serif; }
-        .gc-table thead tr { background: #fafafa; }
-        .gc-table th { padding: 12px 20px; text-align: left; font-size: 11.5px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        .gc-table thead tr { background: white; }
+        .gc-table th { padding: 16px 20px; text-align: left; font-size: 13px; font-weight: 500; color: #9ca3af; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
+        .gc-table th:first-child { padding-left: 32px; width: 40px; }
         .gc-table th.right { text-align: right; }
-        .gc-table td { padding: 14px 20px; color: #374151; vertical-align: middle; border-bottom: 1px solid #f9fafb; }
+        .gc-table td { padding: 16px 20px; color: #4b5563; font-weight: 500; vertical-align: middle; border-bottom: 1px solid #f9fafb; }
+        .gc-table td:first-child { padding-left: 32px; }
         .gc-table tr:last-child td { border-bottom: none; }
         .gc-table tbody tr { transition: background 0.12s; }
-        .gc-table tbody tr:hover { background: #fafffe; }
+        .gc-table tbody tr:hover { background: #fafafb; }
+        .gc-table tbody tr.selected-row { background: #faf5ff; }
         .gc-table tbody tr:hover .gc-row-actions { opacity: 1; }
+
+        .gc-checkbox { appearance: none; width: 18px; height: 18px; border: 1.5px solid #d1d5db; border-radius: 5px; cursor: pointer; position: relative; transition: all 0.2s; margin: 0; padding: 0; background: white; }
+        .gc-checkbox:hover { border-color: #9333ea; }
+        .gc-checkbox:checked { background-color: #9333ea; border-color: #9333ea; }
+        .gc-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 
         /* Row actions */
         .gc-row-actions { display: flex; gap: 5px; justify-content: flex-end; opacity: 0; transition: opacity 0.15s; }
@@ -731,20 +758,16 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
         <div className="gc-card">
           {/* Toolbar */}
           <div className="gc-toolbar">
+            <h2 className="gc-toolbar-title">{config.title} Information</h2>
             <div className="gc-search">
-              <span className="gc-search-icon"><IconSearch /></span>
               <input
                 type="text"
-                placeholder={config.searchPlaceholder || 'Rechercher…'}
+                placeholder={config.searchPlaceholder || 'Search by name or id'}
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
               />
+              <span className="gc-search-icon" style={{ transform: 'scale(1.1)' }}><IconSearch /></span>
             </div>
-            {data?.pagination?.total != null && (
-              <div className="gc-count">
-                <strong>{data.pagination.total}</strong> résultat{data.pagination.total !== 1 ? 's' : ''}
-              </div>
-            )}
           </div>
 
           {/* Table */}
@@ -752,16 +775,17 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
             <table className="gc-table">
               <thead>
                 <tr>
+                  <th><input type="checkbox" className="gc-checkbox" checked={allSelected} onChange={handleSelectAll} /></th>
                   {config.columns.map(col => <th key={col.key}>{col.label}</th>)}
                   <th className="right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} cols={config.columns.length} delay={i} />)
+                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} cols={config.columns.length + 1} delay={i} />)
                 ) : !data?.data?.length ? (
                   <tr>
-                    <td colSpan={config.columns.length + 1}>
+                    <td colSpan={config.columns.length + 2}>
                       <div className="gc-empty">
                         <div className="gc-empty-icon">{config.icon}</div>
                         <div className="gc-empty-title">Aucune donnée trouvée</div>
@@ -776,7 +800,10 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
                   </tr>
                 ) : (
                   data.data.map((item: any) => (
-                    <tr key={item[config.primaryKey]}>
+                    <tr key={item[config.primaryKey]} className={selectedIds.has(item[config.primaryKey]) ? 'selected-row' : ''}>
+                      <td>
+                        <input type="checkbox" className="gc-checkbox" checked={selectedIds.has(item[config.primaryKey])} onChange={() => handleSelectRow(item[config.primaryKey])} />
+                      </td>
                       {config.columns.map(col => (
                         <td key={col.key}>
                           {col.render ? col.render(item[col.key], item) : item[col.key] ?? '—'}
