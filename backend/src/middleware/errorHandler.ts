@@ -11,10 +11,11 @@ export class AppError extends Error {
   }
 }
 
-// Validation Error Formatter (for Zod)
+// Validation Error Formatter (for Zod — handles both .errors and .issues)
 export const formatZodError = (err: any) => {
-  return err.errors.map((e: any) => ({
-    path: e.path.join('.'),
+  const issues = err.issues || err.errors || [];
+  return issues.map((e: any) => ({
+    path: (e.path || []).join('.'),
     message: e.message,
   }));
 };
@@ -31,15 +32,14 @@ export const errorHandler = (
 
   // Log to console for dev
   if (process.env.NODE_ENV !== 'production') {
-    console.log(err);
+    console.error(err);
   }
 
   // Zod Validation Error
   if (err.name === 'ZodError') {
-    const message = 'Validation Error';
     return res.status(400).json({
       success: false,
-      message,
+      message: 'Validation Error',
       errors: formatZodError(err),
     });
   }
@@ -54,7 +54,14 @@ export const errorHandler = (
   if (err.code === 'ER_NO_DEFAULT_FOR_FIELD') {
     return res.status(400).json({
       success: false,
-      message: 'Missing required field',
+      message: err.sqlMessage || 'Missing required field',
+    });
+  }
+
+  if (err.code === 'ER_BAD_NULL_ERROR') {
+    return res.status(400).json({
+      success: false,
+      message: err.sqlMessage || 'A required field cannot be null',
     });
   }
 

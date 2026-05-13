@@ -39,7 +39,6 @@ export const Admins = () => {
             ]
           },
           { name: 'mobile', label: 'Téléphone Mobile', type: 'text' },
-          { name: 'alanyaID', label: 'Alanya ID', type: 'text' },
           { name: 'actif', label: 'Compte actif', type: 'checkbox' }
         ]
       }}

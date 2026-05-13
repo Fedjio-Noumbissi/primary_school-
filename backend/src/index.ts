@@ -14,6 +14,7 @@ import financeRoutes from './routes/finance.routes';
 import parametresRoutes from './routes/parametres.routes';
 import evaluationsRoutes from './routes/evaluations.routes';
 import permissionsRoutes from './routes/permissions.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 // Load env vars
 dotenv.config();
@@ -47,6 +48,8 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/parametres', parametresRoutes);
 app.use('/api/evaluations', evaluationsRoutes);
 app.use('/api/permissions', permissionsRoutes);
+console.log('Registering /api/dashboard routes...');
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error Handler (must be after routes)
 app.use(errorHandler);

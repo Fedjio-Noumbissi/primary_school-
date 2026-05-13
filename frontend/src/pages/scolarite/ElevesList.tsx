@@ -1,7 +1,10 @@
 import { Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const ElevesList = () => {
+  const navigate = useNavigate();
+
   return (
     <GenericCRUDPage
       config={{
@@ -10,7 +13,9 @@ export const ElevesList = () => {
         subtitle: 'Liste et suivi de tous les élèves inscrits dans l\'établissement',
         icon: <Users />,
         primaryKey: 'matricule',
+        breadcrumb: [{ label: 'Scolarité' }, { label: 'Élèves' }],
         searchPlaceholder: "Rechercher un élève (nom, matricule)...",
+        onRowClick: (row) => navigate(`/scolarite/eleves/${row.matricule}`),
         columns: [
           { key: 'nom', label: 'Nom Complet', render: (_, row) => {
              const fullName = `${row.nom || 'Élève'} ${row.prenom || ''}`.trim();
@@ -34,7 +39,15 @@ export const ElevesList = () => {
           { name: 'nom', label: 'Nom', type: 'text', required: true },
           { name: 'prenom', label: 'Prénom', type: 'text' },
           { name: 'dateNaissance', label: 'Date de naissance', type: 'date' },
-          { name: 'lieuNaissance', label: 'Lieu de naissance', type: 'text' },
+          { 
+            name: 'idVilleNaissance', 
+            label: 'Lieu de naissance (Ville)', 
+            type: 'select', 
+            optionsEndpoint: '/parametres/villes',
+            optionsValueKey: 'idVille',
+            optionsLabelKey: 'libelle',
+            required: true 
+          },
           { 
             name: 'sexe', 
             label: 'Sexe', 
@@ -46,7 +59,6 @@ export const ElevesList = () => {
           },
           { name: 'langue', label: 'Langue (FR/EN)', type: 'text' },
           { name: 'photoURL', label: 'URL de la photo', type: 'text' },
-          { name: 'idVilleNaissance', label: 'ID Ville de naissance', type: 'number' },
           { name: 'idAdmin', label: 'ID Admin', type: 'number' },
           { name: 'actif', label: 'Élève actuellement actif', type: 'checkbox' }
         ]

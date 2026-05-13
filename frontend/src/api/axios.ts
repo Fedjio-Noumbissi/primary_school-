@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://163.123.183.89:17705/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 60000, // 60s — connexion DB distante peut être très lente
   headers: {
     'Content-Type': 'application/json',

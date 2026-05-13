@@ -15,6 +15,7 @@ export const Specialites = () => {
           { key: 'idAdmin', label: 'ID Admin', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
+          { name: 'idSpecialite', label: 'ID Spécialité (numérique)', type: 'number', required: true },
           { name: 'libelle', label: 'Nom de la spécialité', type: 'text', required: true },
           { name: 'idAdmin', label: 'ID Admin', type: 'number' }
         ]

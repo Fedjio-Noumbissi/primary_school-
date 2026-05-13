@@ -20,6 +20,7 @@ export const Livres = () => {
           { key: 'idSpecialite', label: 'ID Spécialité', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> }
         ],
         fields: [
+          { name: 'idLivre', label: 'ID Livre (numérique)', type: 'number', required: true },
           { name: 'titre', label: 'Titre du livre', type: 'text', required: true },
           { name: 'auteurs', label: 'Auteur(s)', type: 'text' },
           { name: 'prix', label: 'Prix (FCFA)', type: 'number' },

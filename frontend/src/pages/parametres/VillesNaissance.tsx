@@ -17,6 +17,7 @@ export const VillesNaissance = () => {
           )}
         ],
         fields: [
+          { name: 'idVille', label: 'ID Ville (numérique)', type: 'number', required: true },
           { name: 'libelle', label: 'Nom de la ville', type: 'text', required: true },
           { name: 'actif', label: 'Ville active', type: 'checkbox' }
         ]

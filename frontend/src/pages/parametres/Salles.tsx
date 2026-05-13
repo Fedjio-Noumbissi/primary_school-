@@ -20,6 +20,7 @@ export const Salles = () => {
           )}
         ],
         fields: [
+          { name: 'idSalle', label: 'ID Salle (numérique)', type: 'number', required: true },
           { name: 'libelle', label: 'Nom de la salle (ex: Salle A1)', type: 'text', required: true },
           { name: 'position', label: 'Position / Localisation', type: 'text' },
           { name: 'surface', label: 'Surface (ex: 60m²)', type: 'text' },

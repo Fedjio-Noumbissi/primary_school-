@@ -1,7 +1,9 @@
 import { Briefcase } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Enseignants = () => {
+  const navigate = useNavigate();
   return (
     <GenericCRUDPage
       config={{
@@ -10,6 +12,8 @@ export const Enseignants = () => {
         subtitle: 'Corps professoral et vacataires',
         icon: <Briefcase />,
         primaryKey: 'idEnseignant',
+        breadcrumb: [{ label: 'Personnes' }, { label: 'Enseignants' }],
+        onRowClick: (row) => navigate(`/personnes/enseignants/${row.idEnseignant}`),
         columns: [
           { key: 'idEnseignant', label: 'ID', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val).padStart(4, '0')}</span> },
           { key: 'idPers', label: 'ID Personne', render: (val) => <span style={{ color: '#374151', fontWeight: 600 }}>{val || 'N/A'}</span> },

@@ -8,22 +8,16 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const [periode, setPeriode] = useState<'3m' | '6m' | '1a'>('6m');
 
-  const { data: chartData = [] } = useQuery({
-    queryKey: ['financeStats', periode],
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats', periode],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/finance/stats?periode=${periode}`);
-        return res.data.data || [];
-      } catch {
-        // Fallback data if endpoint doesn't exist
-        return [
-          { name: 'Jan', paiements: 1500000, depenses: 800000 },
-          { name: 'Fév', paiements: 2200000, depenses: 950000 },
-          { name: 'Mar', paiements: 1800000, depenses: 850000 },
-        ];
-      }
+      const res = await api.get(`/dashboard/stats?periode=${periode}`);
+      return res.data.data;
     }
   });
+
+  const chartData = stats?.chartData || [];
+  const recentEleves = stats?.recentEleves || [];
 
   return (
     <div className="p-4 lg:p-8 font-sora bg-[#f4f6f8] min-h-screen text-gray-800">
@@ -51,13 +45,18 @@ export const Dashboard = () => {
 
           {/* Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-orange-100 transition-colors">
+            <div 
+              onClick={() => navigate('/scolarite/eleves')}
+              className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-orange-100 transition-all cursor-pointer hover:shadow-md active:scale-95"
+            >
               <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 mb-6">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
               </div>
               <div>
                 <p className="text-gray-500 text-[13px] mb-1">Élèves Inscrits</p>
-                <p className="text-2xl font-bold text-gray-800"><span className="text-orange-500">580</span></p>
+                <p className="text-2xl font-bold text-gray-800">
+                  <span className="text-orange-500">{isLoading ? '...' : stats?.eleves || 0}</span>
+                </p>
               </div>
             </div>
 
@@ -66,18 +65,23 @@ export const Dashboard = () => {
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <div>
-                <p className="text-gray-500 text-[13px] mb-1">Taux de Réussite</p>
-                <p className="text-2xl font-bold text-gray-800"><span className="text-emerald-600">89%</span></p>
+                <p className="text-gray-500 text-[13px] mb-1">Total Finances</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  <span className="text-emerald-600">{isLoading ? '...' : (stats?.financeTotal || 0).toLocaleString()} <span className="text-xs">F</span></span>
+                </p>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-gray-200 transition-colors">
+            <div 
+              onClick={() => navigate('/personnes/enseignants')}
+              className="bg-white p-5 rounded-[24px] shadow-sm flex flex-col justify-between border border-white hover:border-gray-200 transition-all cursor-pointer hover:shadow-md active:scale-95"
+            >
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-800 mb-6">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
               </div>
               <div>
-                <p className="text-gray-500 text-[13px] mb-1">Employés</p>
-                <p className="text-2xl font-bold text-gray-800">42</p>
+                <p className="text-gray-500 text-[13px] mb-1">Enseignants</p>
+                <p className="text-2xl font-bold text-gray-800">{isLoading ? '...' : stats?.enseignants || 0}</p>
               </div>
             </div>
 
@@ -159,42 +163,39 @@ export const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="text-[13px]">
-                  <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-2 flex items-center">
-                      <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold mr-3">DA</div>
-                      <div>
-                        <p className="font-semibold text-gray-800">Direction</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Administratif</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-2 text-gray-500">Validation Budgétaire</td>
-                    <td className="py-3 px-2 text-gray-500">Finance</td>
-                    <td className="py-3 px-2 text-gray-500 font-medium">14:20</td>
-                    <td className="py-3 px-2">
-                      <span className="text-emerald-600 text-[11px] bg-emerald-50 px-2 py-1 rounded-full font-medium">Effectué</span>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <button className="text-gray-400 hover:text-orange-500 transition-colors">Détails</button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-2 flex items-center">
-                      <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3">SP</div>
-                      <div>
-                        <p className="font-semibold text-gray-800">Scolarité</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Inscription</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-2 text-gray-500">Nouveau Dossier</td>
-                    <td className="py-3 px-2 text-gray-500">Scolarité</td>
-                    <td className="py-3 px-2 text-gray-500 font-medium">11:05</td>
-                    <td className="py-3 px-2">
-                      <span className="text-emerald-600 text-[11px] bg-emerald-50 px-2 py-1 rounded-full font-medium">Effectué</span>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <button className="text-gray-400 hover:text-blue-500 transition-colors">Détails</button>
-                    </td>
-                  </tr>
+                  {recentEleves.length === 0 ? (
+                    <tr><td colSpan={6} className="py-8 text-center text-gray-400">Aucune inscription récente</td></tr>
+                  ) : (
+                    recentEleves.map((eleve: any) => (
+                      <tr key={eleve.matricule} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="py-3 px-2 flex items-center">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3">
+                            {eleve.nom?.charAt(0) || 'E'}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800">{eleve.nom} {eleve.prenom}</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Matricule: {eleve.matricule}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 text-gray-500">Nouvelle Inscription</td>
+                        <td className="py-3 px-2 text-gray-500">Scolarité</td>
+                        <td className="py-3 px-2 text-gray-500 font-medium">
+                          {eleve.created_at ? new Date(eleve.created_at).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className="text-emerald-600 text-[11px] bg-emerald-50 px-2 py-1 rounded-full font-medium">Validé</span>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <button 
+                            onClick={() => navigate(`/scolarite/eleves/${eleve.matricule}`)}
+                            className="text-gray-400 hover:text-blue-500 transition-colors"
+                          >
+                            Détails
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

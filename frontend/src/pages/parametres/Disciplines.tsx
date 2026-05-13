@@ -15,6 +15,7 @@ export const Disciplines = () => {
           { key: 'points', label: 'Points', render: (val) => <span style={{ color: val > 0 ? '#059669' : '#e11d48', fontWeight: 600 }}>{val ?? 'N/A'}</span> }
         ],
         fields: [
+          { name: 'ID', label: 'ID Discipline (numérique)', type: 'number', required: true },
           { name: 'libelle', label: 'Libellé (ex: Absences, Conduite)', type: 'text', required: true },
           { name: 'points', label: 'Points attribués', type: 'number', required: true }
         ]

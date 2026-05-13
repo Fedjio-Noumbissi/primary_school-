@@ -28,6 +28,11 @@ const IconMenu = () => (
     <line x1="3" y1="8" x2="21" y2="8" /><line x1="3" y1="16" x2="21" y2="16" />
   </svg>
 );
+const IconLoader = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ width: 14, height: 14, animation: 'gc-spin 0.8s linear infinite' }}>
+    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+  </svg>
+);
 
 // ── Types ─────────────────────────────────────────────────────────
 interface NotificationItem {
@@ -46,18 +51,65 @@ function Header({
   onToggle: () => void;
 }) {
   const { user, logout } = useAuthStore();
-  const [searchFocused, setSearchFocused] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? 'AD';
   const displayName = user?.nom ?? user?.username ?? 'Administrateur';
   
-  // ── Queries & Mutations ──────────────────────────────────────────────────
+  // ── Search Query ──────────────────────────────────────────────────────────
+  const { data: searchResults = [], isLoading: searchLoading } = useQuery({
+    queryKey: ['global-search', searchQuery],
+    queryFn: async () => {
+      if (searchQuery.length < 2) return [];
+      try {
+        const [elevesRes, classesRes, profsRes] = await Promise.all([
+          api.get('/scolarite/eleves', { params: { search: searchQuery, limit: 4 } }),
+          api.get('/scolarite/classes', { params: { search: searchQuery, limit: 3 } }),
+          api.get('/personnes/enseignants', { params: { search: searchQuery, limit: 3 } }),
+        ]);
+
+        const eleveItems = (elevesRes.data?.data || []).map((e: any) => ({
+          id: e.matricule,
+          title: `${e.nom || ''} ${e.prenom || ''}`.trim() || 'Élève sans nom',
+          subtitle: `Élève • Matricule ${e.matricule}`,
+          path: `/scolarite/eleves/${e.matricule}`,
+          type: 'eleve'
+        }));
+
+        const classeItems = (classesRes.data?.data || []).map((c: any) => ({
+          id: c.idClasse,
+          title: c.libelle || 'Classe sans nom',
+          subtitle: `Classe • ID #${c.idClasse}`,
+          path: `/scolarite/classes/${c.idClasse}`,
+          type: 'classe'
+        }));
+
+        const profItems = (profsRes.data?.data || []).map((p: any) => ({
+          id: p.idEnseignant,
+          title: `Enseignant #${p.idEnseignant}`,
+          subtitle: `Enseignant • Profil ${p.idPers || 'N/A'}`,
+          path: `/personnes/enseignants/${p.idEnseignant}`,
+          type: 'prof'
+        }));
+
+        return [...eleveItems, ...classeItems, ...profItems];
+      } catch (err) {
+        console.error("Global search error:", err);
+        return [];
+      }
+    },
+    enabled: searchQuery.length >= 2,
+  });
+
+  // ── Notifications ────────────────────────────────────────────────────────
   const { data: notifications = [] } = useQuery<NotificationItem[]>({
     queryKey: ['notifications'],
     queryFn: async () => {
@@ -85,6 +137,7 @@ function Header({
   const handleOpenNotifs = () => {
     setNotifOpen(o => !o);
     setProfileOpen(false);
+    setSearchOpen(false);
     if (!notifOpen && unread > 0) {
       markAsReadMutation.mutate();
     }
@@ -101,11 +154,18 @@ function Header({
     navigate('/login', { replace: true });
   };
 
+  const handleSearchResultClick = (path: string) => {
+    navigate(path);
+    setSearchQuery('');
+    setSearchOpen(false);
+  };
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) setSearchOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -140,20 +200,41 @@ function Header({
         /* Search */
         .hd-search {
           display: flex; align-items: center; gap: 10px;
-          flex: 1; max-width: 420px;
-          background: ${searchFocused ? '#fff' : 'rgba(0,0,0,0.04)'};
-          border: 1.5px solid ${searchFocused ? '#10b981' : 'rgba(0,0,0,0.07)'};
+          background: rgba(0,0,0,0.04);
+          border: 1.5px solid rgba(0,0,0,0.07);
           border-radius: 12px; padding: 0 14px;
           height: 38px;
           transition: all 0.2s;
-          box-shadow: ${searchFocused ? '0 0 0 3px rgba(16,185,129,0.1)' : 'none'};
+        }
+        .hd-search.focused {
+          background: #fff;
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
         }
         .hd-search input {
           flex: 1; background: none; border: none; outline: none;
           font-size: 13.5px; color: #111827; font-family: 'Sora', sans-serif; font-weight: 400;
         }
         .hd-search input::placeholder { color: #9ca3af; }
-        .hd-search-icon { color: ${searchFocused ? '#059669' : '#9ca3af'}; transition: color 0.2s; flex-shrink: 0; }
+        .hd-search-icon { color: #9ca3af; transition: color 0.2s; flex-shrink: 0; }
+        .hd-search.focused .hd-search-icon { color: #059669; }
+
+        .hd-search-item {
+          display: flex; align-items: center; gap: 12px;
+          padding: 10px 16px; transition: background 0.12s; cursor: pointer;
+          border-bottom: 1px solid #f9fafb;
+        }
+        .hd-search-item:hover { background: #f9fafb; }
+        .hd-search-type-icon {
+          width: 32px; height: 32px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 700; flex-shrink: 0;
+        }
+        .hd-search-type-icon.eleve { background: #ecfdf5; color: #059669; }
+        .hd-search-type-icon.classe { background: #eff6ff; color: #3b82f6; }
+        .hd-search-type-icon.prof { background: #fff7ed; color: #f97316; }
+        .hd-search-title { font-size: 13px; font-weight: 600; color: #111827; }
+        .hd-search-sub { font-size: 11px; color: #9ca3af; margin-top: 1px; }
 
         /* Right side */
         .hd-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
@@ -264,14 +345,49 @@ function Header({
         </button>
 
         {/* Search */}
-        <div className="hd-search">
-          <span className="hd-search-icon"><IconSearch /></span>
-          <input
-            type="text"
-            placeholder="Rechercher un élève, une classe…"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-          />
+        <div className="hd-search-container" ref={searchContainerRef} style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
+          <div className={`hd-search ${searchOpen ? 'focused' : ''}`}>
+            <span className="hd-search-icon"><IconSearch /></span>
+            <input
+              type="text"
+              placeholder="Rechercher un élève, une classe…"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+              onFocus={() => setSearchOpen(true)}
+            />
+          </div>
+
+          {searchOpen && searchQuery.length >= 2 && (
+            <div className="hd-dropdown search-results">
+              <div className="hd-drop-hd">
+                <span className="hd-drop-title">Résultats de recherche</span>
+                {searchLoading && <IconLoader />}
+              </div>
+              <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                {searchResults.length === 0 && !searchLoading ? (
+                  <div style={{ padding: '20px', textAlign: 'center', fontSize: '13px', color: '#6b7280' }}>
+                    Aucun résultat pour "{searchQuery}"
+                  </div>
+                ) : (
+                  searchResults.map((res: any) => (
+                    <div 
+                      key={`${res.type}-${res.id}`} 
+                      className="hd-search-item"
+                      onClick={() => handleSearchResultClick(res.path)}
+                    >
+                      <div className={`hd-search-type-icon ${res.type}`}>
+                        {res.type === 'eleve' ? 'Ét' : 'Cl'}
+                      </div>
+                      <div>
+                        <div className="hd-search-title">{res.title}</div>
+                        <div className="hd-search-sub">{res.subtitle}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="hd-right">
@@ -377,6 +493,11 @@ export const BaseLayout = () => {
 
         @media (max-width: 768px) {
           .layout-content { margin-left: 0 !important; }
+        }
+
+        @keyframes gc-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
 

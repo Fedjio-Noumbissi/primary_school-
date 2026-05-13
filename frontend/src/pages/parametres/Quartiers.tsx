@@ -15,6 +15,7 @@ export const Quartiers = () => {
           { key: 'description', label: 'Description', render: (val) => <span style={{ color: '#6b7280' }}>{val || '-'}</span> }
         ],
         fields: [
+          { name: 'idQuartier', label: 'ID Quartier (numérique)', type: 'number', required: true },
           { name: 'libelle', label: 'Nom du quartier/dortoir', type: 'text', required: true },
           { name: 'description', label: 'Description', type: 'textarea' }
         ]

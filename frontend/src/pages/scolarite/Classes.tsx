@@ -1,7 +1,9 @@
 import { FolderOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
 export const Classes = () => {
+  const navigate = useNavigate();
   return (
     <GenericCRUDPage
       config={{
@@ -10,6 +12,8 @@ export const Classes = () => {
         subtitle: 'Gestion des classes de l\'établissement',
         icon: <FolderOpen />,
         primaryKey: 'idClasse',
+        breadcrumb: [{ label: 'Scolarité' }, { label: 'Classes' }],
+        onRowClick: (row) => navigate(`/scolarite/classes/${row.idClasse}`),
         columns: [
           { key: 'libelle', label: 'Nom de la Classe', render: (val) => <span style={{ fontWeight: 600, color: '#111827' }}>{val || 'N/A'}</span> },
           { key: 'idCycle', label: 'ID Cycle', render: (val) => <span style={{ color: '#6b7280' }}>{val || 'N/A'}</span> },

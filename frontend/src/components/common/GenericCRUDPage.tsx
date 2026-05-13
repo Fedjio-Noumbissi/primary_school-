@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { PageTemplate } from '../layout/PageTemplate';
+import { Breadcrumb } from './Breadcrumb';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import toast from 'react-hot-toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface ColumnConfig {
@@ -16,6 +19,9 @@ export interface FieldConfig {
   label: string;
   type: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox';
   options?: { value: any; label: string }[];
+  optionsEndpoint?: string;
+  optionsLabelKey?: string;
+  optionsValueKey?: string;
   required?: boolean;
   placeholder?: string;
 }
@@ -30,6 +36,8 @@ export interface GenericCRUDConfig {
   primaryKey: string;
   searchPlaceholder?: string;
   emptyStateDesc?: string;
+  onRowClick?: (row: any) => void;
+  breadcrumb?: { label: string; path?: string }[];
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -111,6 +119,46 @@ interface ModalProps {
   isPending: boolean;
   title: string;
 }
+
+const SelectField = ({ field, value, onChange, baseInput }: { field: FieldConfig; value: any; onChange: any; baseInput: any }) => {
+  const { data: dynamicOptions = [] } = useQuery({
+    queryKey: ['select-options', field.optionsEndpoint],
+    queryFn: async () => {
+      if (!field.optionsEndpoint) return [];
+      const res = await api.get(field.optionsEndpoint);
+      const items = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      return items.map((item: any) => ({
+        value: item[field.optionsValueKey || 'id'],
+        label: item[field.optionsLabelKey || 'libelle']
+      }));
+    },
+    enabled: !!field.optionsEndpoint,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const options = [...(field.options || []), ...dynamicOptions];
+
+  return (
+    <select
+      name={field.name}
+      value={value ?? ''}
+      onChange={onChange}
+      required={field.required}
+      className="gc-field-select"
+      style={{
+        ...baseInput, cursor: 'pointer', appearance: 'none',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%239ca3af' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px',
+        paddingRight: 36,
+      }}
+    >
+      <option value="">Sélectionner…</option>
+      {options.map((opt: any) => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  );
+};
 
 const Modal = ({ open, onClose, editingItem, fields, formData, onChange, onSubmit, isPending, title }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -203,24 +251,12 @@ const Modal = ({ open, onClose, editingItem, fields, formData, onChange, onSubmi
             {field.label}
             {field.required && <span style={{ color: '#e11d48', fontSize: 13 }}>*</span>}
           </label>
-          <select
-            name={field.name}
-            value={formData[field.name] ?? ''}
-            onChange={onChange}
-            required={field.required}
-            className="gc-field-select"
-            style={{
-              ...baseInput, cursor: 'pointer', appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%239ca3af' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px',
-              paddingRight: 36,
-            }}
-          >
-            <option value="">Sélectionner…</option>
-            {field.options?.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <SelectField 
+            field={field} 
+            value={formData[field.name]} 
+            onChange={onChange} 
+            baseInput={baseInput} 
+          />
         </div>
       );
     }
@@ -568,7 +604,14 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: any) => { await api.delete(`${config.endpoint}/${id}`); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: [config.endpoint] }); setDeleteId(null); },
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: [config.endpoint] }); 
+      setDeleteId(null); 
+      toast.success("Suppression réussie !");
+    },
+    onError: (err: any) => {
+      toast.error("Erreur lors de la suppression : " + (err.response?.data?.message || err.message));
+    }
   });
 
   const saveMutation = useMutation({
@@ -596,7 +639,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [config.endpoint] });
       closeModal();
-      alert("Enregistrement réussi !");
+      toast.success("Enregistrement réussi !");
     },
     onError: (err: any) => {
       const respData = err.response?.data;
@@ -604,7 +647,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
       if (respData?.errors && Array.isArray(respData.errors)) {
         errMsg += '\n' + respData.errors.map((e: any) => `- ${e.path}: ${e.message}`).join('\n');
       }
-      alert("Erreur lors de l'enregistrement :\n" + errMsg);
+      toast.error("Erreur lors de l'enregistrement :\n" + errMsg);
     }
   });
 
@@ -645,6 +688,8 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
     setSelectedIds(newSet);
   };
   const allSelected = data?.data?.length > 0 && selectedIds.size === data.data.length;
+  
+  usePageMeta(config.title);
 
   const headerActions = (
     <button
@@ -701,6 +746,8 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
         .gc-table tr:last-child td { border-bottom: none; }
         .gc-table tbody tr { transition: background 0.12s; }
         .gc-table tbody tr:hover { background: #fafafb; }
+        .gc-table tbody tr.clickable-row { cursor: pointer; }
+        .gc-table tbody tr.clickable-row:hover { background: #f0fdf4; }
         .gc-table tbody tr.selected-row { background: #faf5ff; }
         .gc-table tbody tr:hover .gc-row-actions { opacity: 1; }
 
@@ -749,26 +796,28 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
         .gc-modal-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
       `}</style>
 
-      <PageTemplate
-        title={config.title}
-        subtitle={config.subtitle}
-        icon={config.icon}
-        headerActions={headerActions}
-      >
-        <div className="gc-card">
-          {/* Toolbar */}
-          <div className="gc-toolbar">
-            <h2 className="gc-toolbar-title">{config.title} Information</h2>
-            <div className="gc-search">
-              <input
-                type="text"
-                placeholder={config.searchPlaceholder || 'Search by name or id'}
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
-              />
-              <span className="gc-search-icon" style={{ transform: 'scale(1.1)' }}><IconSearch /></span>
+      <div className="gc-root">
+        {config.breadcrumb && <div style={{ marginBottom: 24 }}><Breadcrumb items={config.breadcrumb} /></div>}
+        <PageTemplate
+          title={config.title}
+          subtitle={config.subtitle}
+          icon={config.icon}
+          headerActions={headerActions}
+        >
+          <div className="gc-card">
+            {/* Toolbar */}
+            <div className="gc-toolbar">
+              <h2 className="gc-toolbar-title">{config.title} Information</h2>
+              <div className="gc-search">
+                <input
+                  type="text"
+                  placeholder={config.searchPlaceholder || 'Search by name or id'}
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1); }}
+                />
+                <span className="gc-search-icon" style={{ transform: 'scale(1.1)' }}><IconSearch /></span>
+              </div>
             </div>
-          </div>
 
           {/* Table */}
           <div className="gc-table-wrap">
@@ -800,8 +849,12 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
                   </tr>
                 ) : (
                   data.data.map((item: any) => (
-                    <tr key={item[config.primaryKey]} className={selectedIds.has(item[config.primaryKey]) ? 'selected-row' : ''}>
-                      <td>
+                    <tr 
+                      key={item[config.primaryKey]} 
+                      className={`${selectedIds.has(item[config.primaryKey]) ? 'selected-row' : ''} ${config.onRowClick ? 'clickable-row' : ''}`}
+                      onClick={() => config.onRowClick?.(item)}
+                    >
+                      <td onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox" className="gc-checkbox" checked={selectedIds.has(item[config.primaryKey])} onChange={() => handleSelectRow(item[config.primaryKey])} />
                       </td>
                       {config.columns.map(col => (
@@ -809,7 +862,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
                           {col.render ? col.render(item[col.key], item) : item[col.key] ?? '—'}
                         </td>
                       ))}
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <div className="gc-row-actions">
                           <button className="gc-act-btn edit" title="Modifier" onClick={() => openModal(item)}><IconEdit /></button>
                           <button className="gc-act-btn del" title="Supprimer" onClick={() => setDeleteId(item[config.primaryKey])}><IconTrash /></button>
@@ -853,6 +906,7 @@ export const GenericCRUDPage = ({ config }: { config: GenericCRUDConfig }) => {
           )}
         </div>
       </PageTemplate>
+    </div>
 
       {/* ── Modal ── */}
       <Modal

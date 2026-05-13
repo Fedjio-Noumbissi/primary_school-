@@ -6,10 +6,10 @@ interface CrudOptions {
   tableName: string;
   primaryKey: string;
   searchFields?: string[];
-  defaultSort?: string;
+  defaultSort?: string; // ex: 'created_at DESC' or 'idQuartier ASC'
 }
 
-export const createCrudController = ({ tableName, primaryKey, searchFields = [], defaultSort = 'created_at DESC' }: CrudOptions) => {
+export const createCrudController = ({ tableName, primaryKey, searchFields = [], defaultSort }: CrudOptions) => {
   return {
     getAll: async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -38,7 +38,11 @@ export const createCrudController = ({ tableName, primaryKey, searchFields = [],
         const [countRows]: any = await pool.query(countQuery, queryParams);
         const total = countRows[0].total;
 
-        query += ` ORDER BY ${defaultSort} LIMIT ? OFFSET ?`;
+        // Only add ORDER BY if a sort column is explicitly provided
+        if (defaultSort) {
+          query += ` ORDER BY ${defaultSort}`;
+        }
+        query += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, offset);
 
         const [rows] = await pool.query(query, queryParams);
@@ -78,8 +82,20 @@ export const createCrudController = ({ tableName, primaryKey, searchFields = [],
 
     create: async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const data = req.body;
-        
+        const rawData = req.body;
+
+        // Filter out null/undefined/empty-string values to rely on DB defaults
+        const data: Record<string, any> = {};
+        for (const [key, val] of Object.entries(rawData)) {
+          if (val !== null && val !== undefined && val !== '') {
+            data[key] = val;
+          }
+        }
+
+        if (Object.keys(data).length === 0) {
+          return res.status(400).json({ success: false, message: 'Aucune donnée valide fournie.' });
+        }
+
         const keys = Object.keys(data);
         const values = Object.values(data);
         const placeholders = keys.map(() => '?').join(', ');
@@ -105,10 +121,18 @@ export const createCrudController = ({ tableName, primaryKey, searchFields = [],
     update: async (req: Request, res: Response, next: NextFunction) => {
       try {
         const { id } = req.params;
-        const data = req.body;
+        const rawData = req.body;
+
+        // Filter out null/undefined/empty-string values
+        const data: Record<string, any> = {};
+        for (const [key, val] of Object.entries(rawData)) {
+          if (val !== null && val !== undefined && val !== '') {
+            data[key] = val;
+          }
+        }
 
         if (Object.keys(data).length === 0) {
-          return res.status(400).json({ success: false, message: 'Nothing to update' });
+          return res.status(400).json({ success: false, message: 'Aucune donnée valide à mettre à jour.' });
         }
 
         const setClauses = Object.keys(data).map(key => `${key} = ?`).join(', ');

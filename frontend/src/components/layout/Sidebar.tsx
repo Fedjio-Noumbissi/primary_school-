@@ -362,14 +362,21 @@ export const Sidebar = ({
                     <NavLink
                       key={sub.path}
                       to={sub.path}
-                      className={({ isActive }) => `sb-sub-itm${isActive ? ' is-active' : ''}`}
+                      className={({ isActive }) => {
+                        const isSubPathActive = location.pathname.startsWith(sub.path + '/');
+                        return `sb-sub-itm${isActive || isSubPathActive ? ' is-active' : ''}`;
+                      }}
                     >
-                      {({ isActive }) => (
-                        <>
-                          <span className="sb-dot" style={{ background: isActive ? sub.dot : 'rgba(255,255,255,0.1)' }} />
-                          {sub.label}
-                        </>
-                      )}
+                      {({ isActive }) => {
+                        const isSubPathActive = location.pathname.startsWith(sub.path + '/');
+                        const active = isActive || isSubPathActive;
+                        return (
+                          <>
+                            <span className="sb-dot" style={{ background: active ? sub.dot : 'rgba(255,255,255,0.1)' }} />
+                            {sub.label}
+                          </>
+                        );
+                      }}
                     </NavLink>
                   ))}
                 </div>
