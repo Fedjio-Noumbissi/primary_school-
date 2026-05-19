@@ -10,7 +10,7 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     const [enseignantRows]: any = await pool.query('SELECT COUNT(*) as total FROM Enseignant');
     
     // 3. Total Utilisateurs (Admins)
-    const [userRows]: any = await pool.query('SELECT COUNT(*) as total FROM utilisateurs');
+    const [userRows]: any = await pool.query('SELECT COUNT(*) as total FROM Admin');
 
     // 4. Finance Stats (Paiements cumulés)
     const [financeRows]: any = await pool.query('SELECT SUM(montant) as total FROM Paiement');
