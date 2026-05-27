@@ -330,8 +330,8 @@ function Header({
         .hd-pdrop-item.danger:hover { background: #fff1f2; }
         .hd-pdrop-sep { height: 1px; background: #f3f4f6; margin: 4px 0; }
 
-        @media (max-width: 768px) {
-          .hd-root { paddzing: 0 16px; gap: 8px; }
+        @media (max-width: 1024px) {
+          .hd-root { padding: 0 16px; gap: 8px; }
           .hd-search { display: none; }
           .hd-profile-name, .hd-profile-role { display: none; }
           .hd-profile-btn { padding: 4px; border-radius: 50%; }
@@ -454,10 +454,10 @@ export const BaseLayout = () => {
   const { isAuthenticated } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize(); // initialize
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -491,7 +491,7 @@ export const BaseLayout = () => {
         }
         .sb-backdrop.show { opacity: 1; pointer-events: auto; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
           .layout-content { margin-left: 0 !important; }
         }
 

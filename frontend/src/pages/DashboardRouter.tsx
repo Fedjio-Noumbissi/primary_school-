@@ -1,3 +1,4 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Dashboard as AdminDashboard } from './Dashboard';
@@ -11,7 +12,7 @@ import { AdministratifDashboard } from './administratif/Dashboard';
 export const DashboardRouter = () => {
   const { user } = useAuthStore();
 
-  const dashboardMap: Record<string, JSX.Element> = {
+  const dashboardMap: Record<string, React.ReactNode> = {
     fondateur       : <AdminDashboard />,
     directeur       : <AdminDashboard />,
     admin_scolarite : <AdminDashboard />,

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface User {
   id: number;
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: {
+      storage: createJSONStorage(() => ({
         getItem: (name: string) => {
           return window.localStorage.getItem(name) || window.sessionStorage.getItem(name);
         },
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
           window.localStorage.removeItem(name);
           window.sessionStorage.removeItem(name);
         },
-      }
+      }))
     }
   )
 );

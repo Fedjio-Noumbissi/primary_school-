@@ -61,11 +61,15 @@ export const Sidebar = ({
   }, [setCollapsed]);
 
   const handleToggleCollapse = () => {
-    setCollapsed(c => {
-      const newVal = !c;
-      localStorage.setItem('sidebar_collapsed', String(newVal));
-      return newVal;
-    });
+    if (window.innerWidth <= 1024) {
+      if (setMobileOpen) setMobileOpen(false);
+    } else {
+      setCollapsed(c => {
+        const newVal = !c;
+        localStorage.setItem('sidebar_collapsed', String(newVal));
+        return newVal;
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -152,7 +156,7 @@ export const Sidebar = ({
           position: fixed; top: 0; left: 0; z-index: 200;
           background: #0d1117;
           display: flex; flex-direction: column;
-          transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
+          transition: width 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1);
           overflow: hidden;
           border-right: 1px solid rgba(255,255,255,0.055);
           font-family: 'Sora', sans-serif;
@@ -301,10 +305,13 @@ export const Sidebar = ({
         .sb-logout:hover { background: rgba(239,68,68,0.14); color: #f87171; border-color: rgba(239,68,68,0.28); }
         .sb-logout-lbl { opacity: ${collapsed ? 0 : 1}; transition: opacity 0.15s; overflow: hidden; white-space: nowrap; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
            .sb {
               width: 260px !important;
-              transform: ${mobileOpen ? 'translateX(0)' : 'translateX(-100%)'};
+              transform: translateX(-100%);
+           }
+           .sb.mobile-open {
+              transform: translateX(0) !important;
            }
            .sb-logo-text, .sb-lbl { opacity: 1 !important; }
            .sb-itm { justify-content: flex-start !important; padding: 10px 12px !important; width: calc(100% - 16px) !important; }
@@ -316,7 +323,7 @@ export const Sidebar = ({
         }
       `}</style>
 
-      <div className="sb">
+      <div className={`sb ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Header */}
         <div className="sb-hd">
           <div className="sb-logo-icon"><IconBookOpen /></div>

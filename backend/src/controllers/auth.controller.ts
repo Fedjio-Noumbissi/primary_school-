@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { pool } from '../config/db';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../middleware/errorHandler';
 
 const loginSchema = z.object({
@@ -24,8 +25,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const admin = rows[0];
 
-    // Verification du mot de passe en clair (selon la maquette)
-    if (admin.password !== password) {
+    // Vérification du mot de passe avec bcrypt
+    const passwordMatch = await bcrypt.compare(password, admin.password);
+    if (!passwordMatch) {
       return next(new AppError('Invalid credentials', 401));
     }
 

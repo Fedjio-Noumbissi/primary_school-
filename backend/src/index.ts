@@ -15,6 +15,7 @@ import parametresRoutes from './routes/parametres.routes';
 import evaluationsRoutes from './routes/evaluations.routes';
 import permissionsRoutes from './routes/permissions.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import notificationsRoutes from './routes/notifications.routes';
 
 // Load env vars
 dotenv.config();
@@ -50,6 +51,7 @@ app.use('/api/evaluations', evaluationsRoutes);
 app.use('/api/permissions', permissionsRoutes);
 console.log('Registering /api/dashboard routes...');
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Error Handler (must be after routes)
 app.use(errorHandler);

@@ -380,8 +380,8 @@ export const Login = () => {
             <div className="lg-divider">accès démo rapide</div>
             <div className="lg-pills">
               {[
-                { label: 'Administrateur', user: 'admin@ecole.fr', pw: 'password123' },
-                { label: 'Directeur', user: 'directeur@ecole.fr', pw: 'password123' },
+                { label: 'Fondateur', user: 'root', pw: 'Admin2026!' },
+                { label: 'Directeur', user: 'erica', pw: 'Admin2026!' },
               ].map(d => (
                 <button key={d.label} className="lg-pill" type="button" onClick={() => { setUsername(d.user); setPassword(d.pw); }}>
                   <span className="lg-pill-lbl">{d.label}</span>
