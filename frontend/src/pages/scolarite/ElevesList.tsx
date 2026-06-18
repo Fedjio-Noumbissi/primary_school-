@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react';
+import { Users, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { GenericCRUDPage } from '../../components/common/GenericCRUDPage';
 
@@ -27,12 +27,37 @@ export const ElevesList = () => {
              );
           }},
           { key: 'matricule', label: 'Matricule', render: (val) => <span style={{ color: '#6b7280', fontFamily: "'JetBrains Mono', monospace" }}>#{String(val || 0).padStart(4, '0')}</span> },
-          { key: 'sexe', label: 'Sexe', render: (val) => <span style={{ color: '#374151', fontWeight: 500 }}>{val == 1 ? 'Masculin' : 'Féminin'}</span> },
-          { key: 'dateNaissance', label: 'Date Naissance', render: (val) => <span style={{ color: '#6b7280' }}>{val ? new Date(val).toLocaleDateString('fr-FR') : 'N/A'}</span> },
           { key: 'actif', label: 'Statut', render: (val) => (
              <span className={val ? 'pt-badge-green' : 'pt-badge-red'}>
                {val ? 'Actif' : 'Inactif'}
              </span>
+          )},
+          { key: 'detaille', label: 'Détails', render: (_, row) => (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/scolarite/eleves/${row.matricule}`);
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+            >
+              <Eye size={16} />
+              Voir
+            </button>
           )}
         ],
         fields: [

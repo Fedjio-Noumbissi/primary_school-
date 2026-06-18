@@ -42,7 +42,9 @@ api.interceptors.response.use(
         window.location.href = '/unauthorized';
         break;
       case 404:
-        toast.error('Ressource introuvable');
+        if (!error.config.url?.includes('/notifications')) {
+          toast.error('Ressource introuvable');
+        }
         break;
       case 500:
         toast.error('Erreur serveur, réessayez');

@@ -50,7 +50,12 @@ export const getEleves = async (req: Request, res: Response, next: NextFunction)
 export const getEleveById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const [rows]: any = await pool.query('SELECT * FROM Eleve WHERE matricule = ?', [id]);
+    const [rows]: any = await pool.query(`
+      SELECT e.*, v.libelle as nomVilleNaissance 
+      FROM Eleve e 
+      LEFT JOIN VilleNaissance v ON e.idVilleNaissance = v.idVille 
+      WHERE e.matricule = ?
+    `, [id]);
     
     if (rows.length === 0) {
       return next(new AppError('Eleve not found', 404));
